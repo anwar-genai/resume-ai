@@ -1,45 +1,141 @@
-resume-ai — AI-powered Resume & Cover Letter Generator built with Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma, NextAuth, and OpenAI.
+## resume-ai
 
-Quick start
+AI-powered Resume & Cover Letter Generator built with Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma (PostgreSQL), NextAuth, and OpenAI.
 
-1. Copy environment variables
+### Screenshots
+
+Add screenshots to make the project easy to grasp at a glance.
 
 ```
+public/screenshots/overview.png
+public/screenshots/dashboard.png
+```
+
+Then reference them here (these paths are already wired up):
+
+```markdown
+![App Overview](public/screenshots/overview.png)
+![Dashboard](public/screenshots/dashboard.png)
+```
+
+### Features
+
+- **Authentication**: Email/password via NextAuth (Credentials + Prisma adapter)
+- **Resume optimization**: ATS-focused improvements using OpenAI
+- **Cover letter generation**: Tailored to job title and company
+- **Storage**: Resumes and letters saved in PostgreSQL via Prisma
+- **Dashboard**: View and download previous outputs (plain text)
+- **Clean UI**: TailwindCSS with minimal, professional styling
+
+### Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), TypeScript, TailwindCSS
+- **Auth**: NextAuth (Credentials provider, Prisma adapter)
+- **Database**: PostgreSQL + Prisma ORM
+- **AI**: OpenAI Chat Completions API (default model: `gpt-4o-mini`)
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database
+- OpenAI API key
+
+### Quick Start
+
+1) Copy environment variables template
+
+```bash
+# macOS/Linux
 cp app/env.example .env.local
+
+# Windows (PowerShell)
+Copy-Item app/env.example .env.local
 ```
 
-2. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `OPENAI_API_KEY` in `.env.local`.
-
-3. Install and migrate
+2) Fill required env vars in `.env.local`
 
 ```
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DBNAME?schema=public
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-strong-random-secret
+OPENAI_API_KEY=sk-...
+# Optional (defaults to gpt-4o-mini)
+OPENAI_MODEL=gpt-4o-mini
+```
+
+3) Install dependencies and run migrations
+
+```bash
 npm i
 npx prisma migrate dev --name init
 ```
 
-4. Run the dev server
+4) Start the dev server
 
-```
+```bash
 npm run dev
 ```
 
-Main routes
+### Main Routes
 
-- `/register`, `/login` for auth (email/password)
-- `/dashboard` to view saved resumes and cover letters
-- `/resume` to paste and optimize resume text
-- `/cover-letter` to generate tailored cover letters
+- `/register`, `/login` — Authentication (email/password)
+- `/dashboard` — Saved resumes and cover letters
+- `/resume` — Paste and optimize resume text
+- `/cover-letter` — Generate tailored cover letters
 
-API
+### API Endpoints
 
-- `POST /api/register` — register user
-- `POST /api/generate-resume` — optimize resume using OpenAI (defaults to `gpt-4o-mini`)
-- `POST /api/generate-cover` — generate cover letter using OpenAI (defaults to `gpt-4o-mini`)
-- `GET /api/export/resume/:id` — download resume as .txt
-- `GET /api/export/cover/:id` — download cover letter as .txt
+- `POST /api/register` — Register user
+- `POST /api/generate-resume` — Optimize resume using OpenAI (default `gpt-4o-mini`)
+- `POST /api/generate-cover` — Generate cover letter using OpenAI (default `gpt-4o-mini`)
+- `GET /api/export/resume/:id` — Download resume as .txt
+- `GET /api/export/cover/:id` — Download cover letter as .txt
 
-Tech notes
+### Environment Variables
 
-- Prisma Adapter for NextAuth with database sessions
-- Models: `User`, `Resume`, `CoverLetter`, and NextAuth tables
-- Secured API routes via `getServerSession`
+```
+DATABASE_URL           # PostgreSQL connection string (URL-encode special chars in password)
+NEXTAUTH_URL           # e.g. http://localhost:3000
+NEXTAUTH_SECRET        # 32-byte base64 string
+OPENAI_API_KEY         # Your OpenAI key
+OPENAI_MODEL           # Optional (e.g., gpt-4o, gpt-4o-mini)
+```
+
+Tip: Generate a secret on any platform
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+### Development Notes
+
+- Prisma client is auto-generated on install via `postinstall` script.
+- Credentials sign-in uses JWT session strategy by default.
+- Secure API routes rely on `getServerSession`.
+
+### Project Structure
+
+```
+app/
+  api/
+    auth/[...nextauth]/route.ts
+    generate-resume/route.ts
+    generate-cover/route.ts
+    export/
+      resume/[id]/route.ts
+      cover/[id]/route.ts
+    register/route.ts
+  dashboard/page.tsx
+  resume/page.tsx
+  cover-letter/page.tsx
+  components/Navbar.tsx
+lib/
+  db.ts
+  auth.ts
+prisma/
+  schema.prisma
+```
+
+### License
+
+MIT
