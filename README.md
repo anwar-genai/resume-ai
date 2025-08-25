@@ -4,19 +4,9 @@ AI-powered Resume & Cover Letter Generator built with Next.js 14 (App Router), T
 
 ### Screenshots
 
-Add screenshots to make the project easy to grasp at a glance.
+![App Overview](./public/screenshots/overview.png)
 
-```
-public/screenshots/overview.png
-public/screenshots/dashboard.png
-```
-
-Then reference them here (these paths are already wired up):
-
-```markdown
-![App Overview](public/screenshots/overview.png)
-![Dashboard](public/screenshots/dashboard.png)
-```
+![Dashboard](./public/screenshots/dashboard.png)
 
 ### Features
 
