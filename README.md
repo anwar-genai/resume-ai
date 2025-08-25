@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+resume-ai — AI-powered Resume & Cover Letter Generator built with Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma, NextAuth, and OpenAI.
 
-## Getting Started
+Quick start
 
-First, run the development server:
+1. Copy environment variables
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+cp app/env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `OPENAI_API_KEY` in `.env.local`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Install and migrate
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+npm i
+npx prisma migrate dev --name init
+```
 
-## Learn More
+4. Run the dev server
 
-To learn more about Next.js, take a look at the following resources:
+```
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Main routes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/register`, `/login` for auth (email/password)
+- `/dashboard` to view saved resumes and cover letters
+- `/resume` to paste and optimize resume text
+- `/cover-letter` to generate tailored cover letters
 
-## Deploy on Vercel
+API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `POST /api/register` — register user
+- `POST /api/generate-resume` — optimize resume using OpenAI (defaults to `gpt-4o-mini`)
+- `POST /api/generate-cover` — generate cover letter using OpenAI (defaults to `gpt-4o-mini`)
+- `GET /api/export/resume/:id` — download resume as .txt
+- `GET /api/export/cover/:id` — download cover letter as .txt
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tech notes
+
+- Prisma Adapter for NextAuth with database sessions
+- Models: `User`, `Resume`, `CoverLetter`, and NextAuth tables
+- Secured API routes via `getServerSession`
