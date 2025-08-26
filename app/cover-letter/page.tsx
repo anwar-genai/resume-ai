@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import GlassCard from "@/app/components/ui/GlassCard";
+import Button from "@/app/components/ui/Button";
+import { Input, Textarea } from "@/app/components/ui/Input";
 
 export default function CoverLetterPage() {
   const [jobTitle, setJobTitle] = useState("");
@@ -9,6 +12,8 @@ export default function CoverLetterPage() {
   const [resumeId, setResumeId] = useState<string>("");
   const [resumes, setResumes] = useState<Array<{ id: string; title: string | null; createdAt: string }>>([]);
   const [jobDescription, setJobDescription] = useState("");
+  const [result, setResult] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -22,8 +27,6 @@ export default function CoverLetterPage() {
       } catch {}
     })();
   }, []);
-  const [result, setResult] = useState<string | null>(null);
-  const router = useRouter();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,55 +50,86 @@ export default function CoverLetterPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold">Generate Cover Letter</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <input
-          value={jobTitle}
-          onChange={(e) => setJobTitle(e.target.value)}
-          placeholder="Job Title"
-          className="w-full p-3 border rounded"
-        />
-        <input
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-          placeholder="Company"
-          className="w-full p-3 border rounded"
-        />
-        <textarea
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-          placeholder="Paste job description (recommended)"
-          className="w-full h-40 p-3 border rounded"
-        />
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Use resume</label>
-          <select value={resumeId} onChange={(e) => setResumeId(e.target.value)} className="w-full p-3 border rounded">
-            {resumes.map((r) => (
-              <option key={r.id} value={r.id}>{r.title || `Resume from ${new Date(r.createdAt).toLocaleString()}`}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button disabled={loading || !jobTitle || !company} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50 w-full sm:w-auto transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black">
-            {loading ? "Generating..." : "Generate"}
-          </button>
-          <button type="button" onClick={() => router.push("/resume")} className="px-4 py-2 border rounded w-full sm:w-auto transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white">
-            Optimize Resume
-          </button>
-          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded w-full sm:w-auto transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white">
-            Go to Dashboard
-          </button>
-        </div>
-      </form>
+      <h1 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">Generate Cover Letter</h1>
+      
+      <GlassCard className="p-6">
+        <form onSubmit={onSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="e.g., Senior Frontend Developer"
+              label="Job Title"
+            />
+            <Input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="e.g., Microsoft"
+              label="Company"
+            />
+          </div>
+          
+          <Textarea
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the job description to create a more targeted cover letter..."
+            label="Job Description (Recommended)"
+            className="h-32"
+          />
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Use Resume</label>
+            <select 
+              value={resumeId} 
+              onChange={(e) => setResumeId(e.target.value)} 
+              className="w-full px-4 py-3 rounded-lg border border-white/20 dark:border-zinc-700/50 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200"
+            >
+              {resumes.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.title || `Resume from ${new Date(r.createdAt).toLocaleDateString()}`}
+                </option>
+              ))}
+            </select>
+            {resumes.length === 0 && (
+              <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                No resumes found. <span className="underline cursor-pointer" onClick={() => router.push("/resume")}>Create one first</span>
+              </p>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button 
+              type="submit" 
+              variant="primary" 
+              disabled={loading || !jobTitle || !company || !resumeId}
+              glow
+            >
+              {loading ? "Generating..." : "Generate Cover Letter"}
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => router.push("/resume")}
+            >
+              Optimize Resume
+            </Button>
+            <Button 
+              type="button" 
+              variant="ghost"
+              onClick={() => router.push("/dashboard")}
+            >
+              Dashboard
+            </Button>
+          </div>
+        </form>
+      </GlassCard>
 
       {result && (
-        <div className="rounded-xl border p-4 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md">
-          <h2 className="font-medium mb-2">Cover Letter</h2>
-          <pre className="whitespace-pre-wrap text-sm">{result}</pre>
-        </div>
+        <GlassCard className="p-6" glow>
+          <h2 className="font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">Generated Cover Letter</h2>
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed">{result}</pre>
+        </GlassCard>
       )}
     </div>
   );
 }
-
-

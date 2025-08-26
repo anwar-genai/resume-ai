@@ -14,14 +14,14 @@ export default function Navbar() {
         <Link href="/" className="font-semibold">resume-ai</Link>
         {/* Desktop nav */}
         <nav className="hidden sm:flex items-center gap-4 text-sm">
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/resume">Resume</Link>
-          <Link href="/cover-letter">Cover Letter</Link>
+          <Link href="/dashboard" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Dashboard</Link>
+          <Link href="/resume" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Resume</Link>
+          <Link href="/cover-letter" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Cover Letter</Link>
           <ThemeToggle />
           {authed ? (
-            <button onClick={() => signOut({ callbackUrl: "/" })} className="px-3 py-1 border rounded">Sign out</button>
+            <button onClick={() => signOut({ callbackUrl: "/" })} className="px-3 py-1.5 border rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Sign out</button>
           ) : (
-            <Link href="/login" className="px-3 py-1 border rounded">Sign in</Link>
+            <Link href="/login" className="px-3 py-1.5 border rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Sign in</Link>
           )}
         </nav>
         {/* Mobile hamburger */}
@@ -45,17 +45,17 @@ export default function Navbar() {
       </div>
       {/* Mobile menu */}
       {open && (
-        <div className="sm:hidden px-4 pb-3 space-y-2 border-t">
+        <div className="sm:hidden px-4 pb-3 space-y-2 border-t bg-white/80 dark:bg-black/60 backdrop-blur-md">
           <div className="flex flex-col gap-2 pt-3">
-            <Link className="px-3 py-2 rounded border" href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
-            <Link className="px-3 py-2 rounded border" href="/resume" onClick={() => setOpen(false)}>Resume</Link>
-            <Link className="px-3 py-2 rounded border" href="/cover-letter" onClick={() => setOpen(false)}>Cover Letter</Link>
-            <div className="flex items-center justify-between">
+            <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
+            <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/resume" onClick={() => setOpen(false)}>Resume</Link>
+            <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/cover-letter" onClick={() => setOpen(false)}>Cover Letter</Link>
+            <div className="flex items-center justify-between pt-2">
               <ThemeToggle />
               {authed ? (
-                <button onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }} className="px-3 py-2 border rounded">Sign out</button>
+                <button onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }} className="px-3 py-2 border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm rounded-md hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all">Sign out</button>
               ) : (
-                <Link href="/login" onClick={() => setOpen(false)} className="px-3 py-2 border rounded">Sign in</Link>
+                <Link href="/login" onClick={() => setOpen(false)} className="px-3 py-2 border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm rounded-md hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all">Sign in</Link>
               )}
             </div>
           </div>

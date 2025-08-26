@@ -95,7 +95,7 @@ export default function ResumePage() {
             onChange={(e) => setResume(e.target.value)}
             placeholder="Paste your resume text here..."
             label="Resume Content"
-            className="h-64"
+            className="h-48"
           />
           
           <Textarea
@@ -103,7 +103,7 @@ export default function ResumePage() {
             onChange={(e) => setJobDescription(e.target.value)}
             placeholder="Paste job description (optional, improves targeting)"
             label="Job Description (Optional)"
-            className="h-40"
+            className="h-32"
           />
           
           <div className="flex flex-wrap gap-3">
