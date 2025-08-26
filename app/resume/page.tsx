@@ -19,9 +19,13 @@ export default function ResumePage() {
     form.append("file", file);
     try {
       const res = await fetch("/api/upload-resume", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      setResume((prev) => (prev ? prev + "\n\n" : "") + data.text);
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        const errText = contentType.includes("application/json") ? (await res.json())?.error : await res.text();
+        throw new Error(errText || "Upload failed");
+      }
+      const data = contentType.includes("application/json") ? await res.json() : { text: await res.text() };
+      setResume((prev) => (prev ? prev + "\n\n" : "") + (data.text || ""));
     } catch (e) {
       alert((e as Error).message);
     }
@@ -37,8 +41,13 @@ export default function ResumePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resume, jobDescription: jobDescription || undefined, title: title || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        const errBody = contentType.includes("application/json") ? await res.json() : await res.text();
+        const errMsg = typeof errBody === "string" ? errBody : errBody?.error;
+        throw new Error(errMsg || "Failed");
+      }
+      const data = contentType.includes("application/json") ? await res.json() : { optimized: await res.text() };
       setResult(data.optimized);
     } catch (err) {
       alert((err as Error).message);
@@ -52,6 +61,10 @@ export default function ResumePage() {
       <h1 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">Optimize Resume</h1>
       
       <GlassCard className="p-6">
+        {/* Usage summary for quick visibility */}
+        <div className="mb-4">
+          <span className="text-sm text-gray-600">Monthly usage is shown on the Dashboard.</span>
+        </div>
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="flex items-center gap-3 flex-wrap">
             <input

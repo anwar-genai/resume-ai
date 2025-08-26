@@ -20,7 +20,16 @@ model User {
   password       String
   emailVerified  DateTime?
   createdAt      DateTime  @default(now())
-
+  
+  // Usage control fields
+  resumeCount    Int       @default(0)
+  coverCount     Int       @default(0)
+  monthlyResumeLimit  Int  @default(10)   // Free tier: 10 resumes per month
+  monthlyCoverLimit   Int  @default(10)   // Free tier: 10 cover letters per month
+  currentPeriodStart  DateTime @default(now())
+  isBlocked      Boolean   @default(false)
+  blockReason    String?
+  
   accounts       Account[]
   sessions       Session[]
   resumes        Resume[]

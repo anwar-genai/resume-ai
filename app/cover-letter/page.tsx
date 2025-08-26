@@ -12,6 +12,7 @@ export default function CoverLetterPage() {
   const [resumeId, setResumeId] = useState<string>("");
   const [resumes, setResumes] = useState<Array<{ id: string; title: string | null; createdAt: string }>>([]);
   const [jobDescription, setJobDescription] = useState("");
+  const [resumeText, setResumeText] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const router = useRouter();
 
@@ -36,10 +37,21 @@ export default function CoverLetterPage() {
       const res = await fetch("/api/generate-cover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobTitle, company, jobDescription: jobDescription || undefined, resumeId: resumeId || undefined }),
+        body: JSON.stringify({ 
+          jobTitle, 
+          company, 
+          jobDescription: jobDescription || undefined, 
+          resumeId: resumeId || undefined,
+          resumeText: resumeText || undefined
+        }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        const errBody = contentType.includes("application/json") ? await res.json() : await res.text();
+        const errMsg = typeof errBody === "string" ? errBody : errBody?.error;
+        throw new Error(errMsg || "Failed");
+      }
+      const data = contentType.includes("application/json") ? await res.json() : { content: await res.text() };
       setResult(data.content);
     } catch (err) {
       alert((err as Error).message);
@@ -78,7 +90,7 @@ export default function CoverLetterPage() {
           />
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Use Resume</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Use Existing Resume (Optional)</label>
             <select 
               value={resumeId} 
               onChange={(e) => setResumeId(e.target.value)} 
@@ -90,18 +102,22 @@ export default function CoverLetterPage() {
                 </option>
               ))}
             </select>
-            {resumes.length === 0 && (
-              <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
-                No resumes found. <span className="underline cursor-pointer" onClick={() => router.push("/resume")}>Create one first</span>
-              </p>
-            )}
+            <p className="text-xs text-gray-500 mt-2">You can also paste resume text below instead of selecting.</p>
           </div>
+
+          <Textarea
+            value={resumeText}
+            onChange={(e) => setResumeText(e.target.value)}
+            placeholder="Paste your resume text here if you don't want to use a saved resume..."
+            label="Resume Text (Optional)"
+            className="h-40"
+          />
           
           <div className="flex flex-wrap gap-3 pt-2">
             <Button 
               type="submit" 
               variant="primary" 
-              disabled={loading || !jobTitle || !company || !resumeId}
+              disabled={loading || !jobTitle || !company || (!resumeId && !resumeText)}
               glow
             >
               {loading ? "Generating..." : "Generate Cover Letter"}

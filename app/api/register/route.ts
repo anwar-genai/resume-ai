@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
+// Email verification disabled by request
 
 export async function POST(request: Request) {
   try {
@@ -14,10 +15,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
+    // Create user (email verification disabled)
     const hashed = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({ data: { email, password: hashed } });
-    return NextResponse.json({ id: user.id, email: user.email });
+    const user = await prisma.user.create({ 
+      data: { 
+        email, 
+        password: hashed,
+        emailVerified: null // Explicitly set as unverified
+      } 
+    });
+
+    return NextResponse.json({ 
+      id: user.id, 
+      email: user.email, 
+      message: "Account created!",
+      emailSent: false 
+    });
   } catch (error) {
+    console.error('Registration error:', error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

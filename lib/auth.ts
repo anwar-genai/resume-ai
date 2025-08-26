@@ -26,7 +26,8 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        return { id: user.id, email: user.email } as any;
+        // Email verification disabled by request
+        return { id: user.id, email: user.email, emailVerified: user.emailVerified } as any;
       },
     }),
   ],
@@ -35,6 +36,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.sub = (user as any).id ?? token.sub;
         token.email = user.email ?? token.email;
+        token.emailVerified = (user as any).emailVerified ?? token.emailVerified;
       }
       return token;
     },
@@ -48,6 +50,7 @@ export const authOptions: NextAuthOptions = {
       if (!user && token && session.user) {
         (session as any).userId = (token as any).sub;
         (session.user as any).id = (token as any).sub;
+        (session.user as any).emailVerified = (token as any).emailVerified;
       }
       return session;
     },

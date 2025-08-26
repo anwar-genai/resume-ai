@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import OpenAI from "openai";
+import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -10,6 +11,37 @@ export async function POST(request: Request) {
   const session = await getAuthSession();
   if (!session?.user?.email || !(session as any).userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = (session as any).userId as string;
+  
+  // Check usage limits before processing
+  const usageCheck = await checkUsageLimit(userId, 'resume');
+  
+  if (!usageCheck.canProceed) {
+    if (usageCheck.isBlocked) {
+      return NextResponse.json(
+        { 
+          error: 'Account blocked',
+          reason: usageCheck.blockReason,
+          blocked: true
+        }, 
+        { status: 403 }
+      );
+    }
+    
+    return NextResponse.json(
+      { 
+        error: `Monthly resume limit reached (${usageCheck.remainingResumes} remaining)`,
+        usage: {
+          remaining: usageCheck.remainingResumes,
+          periodEnd: usageCheck.periodEnd,
+          type: 'resume'
+        },
+        limitReached: true
+      }, 
+      { status: 429 }
+    );
   }
 
   try {
@@ -38,12 +70,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No content generated" }, { status: 502 });
     }
 
-    const userId = (session as any).userId as string;
     const saved = await prisma.resume.create({
       data: { userId, title: title?.slice(0, 120) ?? null, content: resume, optimizedContent: optimized },
     });
 
-    return NextResponse.json({ id: saved.id, optimized: optimized });
+    // Increment usage count after successful generation
+    await incrementUsage(userId, 'resume');
+
+    return NextResponse.json({ 
+      id: saved.id, 
+      optimized: optimized,
+      usage: {
+        remaining: usageCheck.remainingResumes - 1,
+        periodEnd: usageCheck.periodEnd
+      }
+    });
   } catch (error: any) {
     return NextResponse.json({ error: "Generation failed", detail: error?.message ?? "" }, { status: 500 });
   }

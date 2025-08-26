@@ -19,6 +19,9 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to register");
+      
+      // Show success message and redirect
+      alert(data.message || "Account created! Please check your email to verify your account.");
       router.push("/login");
     } catch (err) {
       alert((err as Error).message);

@@ -15,7 +15,11 @@ export default function LoginPage() {
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (res?.error) {
-      alert(res.error);
+      if (res.error.includes("verify your email")) {
+        alert(res.error + " You can request a new verification email if needed.");
+      } else {
+        alert(res.error);
+      }
     } else {
       router.push("/dashboard");
     }
@@ -29,7 +33,10 @@ export default function LoginPage() {
         <input className="w-full p-3 border rounded" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button disabled={loading} className="w-full py-2 bg-black text-white rounded">{loading ? "Signing in..." : "Sign In"}</button>
       </form>
-      <p className="text-sm text-gray-600 mt-3">No account? <a className="underline" href="/register">Register</a></p>
+      <div className="text-sm text-gray-600 mt-3 space-y-2">
+        <p>No account? <a className="underline hover:text-indigo-600" href="/register">Register</a></p>
+        <p><a className="underline hover:text-indigo-600" href="/auth/forgot-password">Forgot password?</a></p>
+      </div>
     </div>
   );
 }

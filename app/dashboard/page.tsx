@@ -3,6 +3,7 @@ import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
+import UsageDisplay from "@/app/components/UsageDisplay";
 
 export default async function DashboardPage({
   searchParams,
@@ -41,6 +42,9 @@ export default async function DashboardPage({
           </Link>
         </nav>
       </header>
+
+      {/* Usage Display */}
+      <UsageDisplay />
 
       <div className="border-b overflow-x-auto">
         <div className="flex gap-6 text-sm min-w-max">
