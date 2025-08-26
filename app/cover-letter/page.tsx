@@ -76,20 +76,20 @@ export default function CoverLetterPage() {
           </select>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button disabled={loading || !jobTitle || !company} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50 w-full sm:w-auto">
+          <button disabled={loading || !jobTitle || !company} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50 w-full sm:w-auto transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black">
             {loading ? "Generating..." : "Generate"}
           </button>
-          <button type="button" onClick={() => router.push("/resume")} className="px-4 py-2 border rounded w-full sm:w-auto">
+          <button type="button" onClick={() => router.push("/resume")} className="px-4 py-2 border rounded w-full sm:w-auto transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white">
             Optimize Resume
           </button>
-          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded w-full sm:w-auto">
+          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded w-full sm:w-auto transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black dark:focus-visible:ring-white">
             Go to Dashboard
           </button>
         </div>
       </form>
 
       {result && (
-        <div className="rounded-xl border p-4 bg-gradient-to-br from-emerald-50 to-white">
+        <div className="rounded-xl border p-4 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md">
           <h2 className="font-medium mb-2">Cover Letter</h2>
           <pre className="whitespace-pre-wrap text-sm">{result}</pre>
         </div>

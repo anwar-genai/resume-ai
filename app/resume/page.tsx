@@ -1,6 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import GlassCard from "@/app/components/ui/GlassCard";
+import Button from "@/app/components/ui/Button";
+import { Input, Textarea } from "@/app/components/ui/Input";
 
 export default function ResumePage() {
   const [title, setTitle] = useState("");
@@ -9,6 +12,20 @@ export default function ResumePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function onUpload(file: File) {
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await fetch("/api/upload-resume", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setResume((prev) => (prev ? prev + "\n\n" : "") + data.text);
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,47 +49,96 @@ export default function ResumePage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold">Optimize Resume</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Resume title (optional, e.g., Backend v2)"
-          className="w-full p-3 border rounded"
-        />
-        <textarea
-          value={resume}
-          onChange={(e) => setResume(e.target.value)}
-          placeholder="Paste your resume text here..."
-          className="w-full h-64 p-3 border rounded"
-        />
-        <textarea
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-          placeholder="Paste job description (optional, improves targeting)"
-          className="w-full h-40 p-3 border rounded"
-        />
-        <div className="flex flex-wrap gap-3">
-          <button disabled={loading || !resume} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50 w-full sm:w-auto">
-            {loading ? "Optimizing..." : "Optimize"}
-          </button>
-          <button type="button" onClick={() => router.push("/cover-letter")} className="px-4 py-2 border rounded w-full sm:w-auto">
-            Generate Cover Letter
-          </button>
-          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded w-full sm:w-auto">
-            Go to Dashboard
-          </button>
-        </div>
-      </form>
+      <h1 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">Optimize Resume</h1>
+      
+      <GlassCard className="p-6">
+        <form onSubmit={onSubmit} className="space-y-6">
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  if (f.size > 10 * 1024 * 1024) {
+                    alert("File too large. Max 10MB");
+                    e.currentTarget.value = "";
+                    return;
+                  }
+                  onUpload(f);
+                  e.currentTarget.value = "";
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload PDF
+            </Button>
+            <span className="text-xs text-gray-500">Extract text automatically from your resume.</span>
+          </div>
+          
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Resume title (optional, e.g., Backend v2)"
+            label="Resume Title"
+          />
+          
+          <Textarea
+            value={resume}
+            onChange={(e) => setResume(e.target.value)}
+            placeholder="Paste your resume text here..."
+            label="Resume Content"
+            className="h-64"
+          />
+          
+          <Textarea
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste job description (optional, improves targeting)"
+            label="Job Description (Optional)"
+            className="h-40"
+          />
+          
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              type="submit" 
+              variant="primary" 
+              disabled={loading || !resume}
+              glow
+            >
+              {loading ? "Optimizing..." : "Optimize Resume"}
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => router.push("/cover-letter")}
+            >
+              Generate Cover Letter
+            </Button>
+            <Button 
+              type="button" 
+              variant="ghost"
+              onClick={() => router.push("/dashboard")}
+            >
+              Dashboard
+            </Button>
+          </div>
+        </form>
+      </GlassCard>
 
       {result && (
-        <div className="rounded-xl border p-4 bg-gradient-to-br from-indigo-50 to-white">
-          <h2 className="font-medium mb-2">Optimized Resume</h2>
-          <pre className="whitespace-pre-wrap text-sm">{result}</pre>
-        </div>
+        <GlassCard className="p-6" glow>
+          <h2 className="font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">Optimized Resume</h2>
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed">{result}</pre>
+        </GlassCard>
       )}
     </div>
   );
 }
-
-
