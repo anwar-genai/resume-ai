@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   const userId = (session as any).userId as string;
   const [resumes, letters] = await Promise.all([
     prisma.resume.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
-    prisma.coverLetter.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
+    prisma.coverLetter.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { resume: true } }),
   ]);
 
   return (
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
           {resumes.map((r) => (
             <div key={r.id} className="rounded border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{new Date(r.createdAt).toLocaleString()}</p>
+                <p className="text-sm text-gray-500">{r.title || "Untitled"} · {new Date(r.createdAt).toLocaleString()}</p>
                 <div className="flex gap-2">
                   <Link className="underline text-sm" href={`/api/export/resume/${r.id}`}>Download</Link>
                 </div>
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
           {letters.map((c) => (
             <div key={c.id} className="rounded border p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{c.jobTitle} @ {c.company}</p>
+                <p className="text-sm text-gray-500">{c.jobTitle} @ {c.company} {c.resume ? `· From: ${c.resume.title || new Date(c.resume.createdAt).toLocaleDateString()}` : ""}</p>
                 <div className="flex gap-2">
                   <Link className="underline text-sm" href={`/api/export/cover/${c.id}`}>Download</Link>
                 </div>

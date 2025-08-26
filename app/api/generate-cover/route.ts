@@ -16,23 +16,23 @@ export async function POST(request: Request) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: "OpenAI API key missing" }, { status: 500 });
     }
-    const { jobTitle, company } = await request.json();
+    const { jobTitle, company, jobDescription, resumeId } = await request.json();
     if (!jobTitle || !company) {
       return NextResponse.json({ error: "Missing jobTitle or company" }, { status: 400 });
     }
 
     const userId = (session as any).userId as string;
-    const latestResume = await prisma.resume.findFirst({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
+    const baseResume = resumeId
+      ? await prisma.resume.findFirst({ where: { id: resumeId, userId } })
+      : await prisma.resume.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } });
 
-    const resumeText = latestResume?.optimizedContent || latestResume?.content || "";
+    const resumeText = baseResume?.optimizedContent || baseResume?.content || "";
     if (!resumeText) {
       return NextResponse.json({ error: "No resume found" }, { status: 400 });
     }
 
-    const prompt = `Write a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${company}. Use the candidate's resume below. Be specific, avoid clichés, and align skills with the role.\n\nRESUME:\n${resumeText}`;
+    const jd = jobDescription ? `Here is the job description to target: \n\n${jobDescription}\n\n` : "";
+    const prompt = `Write a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${company}. Use the candidate's resume below. Be specific, avoid clichés, align skills with the role, and emphasize verifiable accomplishments. ${jd}RESUME:\n${resumeText}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
@@ -48,9 +48,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No content generated" }, { status: 502 });
     }
 
-    const saved = await prisma.coverLetter.create({
-      data: { userId, jobTitle, company, content: letter },
-    });
+    const data: any = { userId, jobTitle, company, content: letter };
+    if (baseResume?.id) data.resumeId = baseResume.id;
+    if (jobDescription) data.jobDescription = jobDescription;
+    const saved = await prisma.coverLetter.create({ data });
 
     return NextResponse.json({ id: saved.id, content: letter });
   } catch (error: any) {

@@ -16,12 +16,13 @@ export async function POST(request: Request) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: "OpenAI API key missing" }, { status: 500 });
     }
-    const { resume } = await request.json();
+    const { resume, jobDescription, title } = await request.json();
     if (!resume || typeof resume !== "string") {
       return NextResponse.json({ error: "Invalid resume content" }, { status: 400 });
     }
 
-    const prompt = `You are an expert ATS resume optimizer. Improve the following resume for ATS scanning, clarity, impact, and tailor it with generic job-market keywords. Keep original chronology and avoid fabrications. Return only improved resume text.\n\nRESUME:\n${resume}`;
+    const context = jobDescription ? `Match the improvements to the following job description. Prioritize relevant keywords and responsibilities that are genuinely supported by the resume.\n\nJOB DESCRIPTION:\n${jobDescription}\n\n` : "";
+    const prompt = `You are an expert ATS resume optimizer. Improve the following resume for ATS scanning, clarity, impact, and specificity. Only include keywords the candidate's experience truly supports. Keep original chronology, avoid fabrications, and return only improved resume text.\n\n${context}RESUME:\n${resume}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
 
     const userId = (session as any).userId as string;
     const saved = await prisma.resume.create({
-      data: { userId, content: resume, optimizedContent: optimized },
+      data: { userId, title: title?.slice(0, 120) ?? null, content: resume, optimizedContent: optimized },
     });
 
     return NextResponse.json({ id: saved.id, optimized: optimized });

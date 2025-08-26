@@ -69,11 +69,13 @@ model VerificationToken {
 model Resume {
   id               String   @id @default(cuid())
   userId           String
+  title            String?
   content          String   @db.Text
   optimizedContent String?  @db.Text
   createdAt        DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coverLetters CoverLetter[]
 
   @@index([userId, createdAt])
 }
@@ -81,12 +83,16 @@ model Resume {
 model CoverLetter {
   id        String   @id @default(cuid())
   userId    String
+  resumeId  String?
   jobTitle  String
   company   String
   content   String   @db.Text
+  jobDescription String? @db.Text
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+  @@index([resumeId])
 }
