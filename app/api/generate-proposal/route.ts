@@ -30,11 +30,12 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { projectTitle, clientName, projectDetails, budget, resumeId, resumeText: providedResumeText } = body as {
+    const { projectTitle, clientName, projectDetails, budget, jobLink, resumeId, resumeText: providedResumeText } = body as {
       projectTitle: string;
       clientName?: string;
       projectDetails?: string;
       budget?: string;
+      jobLink?: string;
       resumeId?: string;
       resumeText?: string;
     };
@@ -61,9 +62,20 @@ export async function POST(request: Request) {
     const salutation = clientName?.trim() ? `Hi ${clientName.trim()},` : `Hi there,`;
     const detailsBlock = projectDetails?.trim() ? `Project details provided:\n\n${projectDetails.trim()}\n\n` : '';
     const budgetLine = budget?.trim() ? `Budget/rate input: ${budget.trim()}` : '';
+    let linkBlock = '';
+    if (typeof jobLink === 'string' && jobLink.startsWith('http')) {
+      try {
+        const resp = await fetch(jobLink, { method: 'GET' });
+        const text = await resp.text();
+        const plain = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 2000);
+        if (plain.length > 100) {
+          linkBlock = `Job link context (excerpt):\n\n${plain}\n\n`;
+        }
+      } catch {}
+    }
     const recipientLabel = clientName?.trim() || 'your organization';
 
-    const prompt = `${salutation}\n\nWrite a concise, persuasive Upwork proposal (180–230 words) for: "${projectTitle}" at ${recipientLabel}.\nStyle: first person, friendly-professional, outcome-driven. No headings, no bold, no emojis. Avoid markdown entirely.\n\nInclude, in this order:\n1) 1–2 sentence hook tailored to the project and recipient (individual vs company tone).\n2) A 2–3 step approach with realistic sequence and short timeline.\n3) 1–2 proof points with concrete results (numbers if available) drawn from the resume.\n4) An explicit rate line using the given budget if present (e.g., "My rate: ${budget || '[set rate]'}; for this scope I’d propose …") and a short availability note.\n5) Clear CTA (15‑minute call or a tiny paid kickoff milestone).\n\nIf the title is long or has multiple variants, choose the single most relevant focus based on the resume and details. Keep sentences tight; avoid generic buzzwords.\n\n${budgetLine ? budgetLine + '\n' : ''}${detailsBlock}RESUME:\n${resumeText}`;
+    const prompt = `${salutation}\n\nWrite a concise, persuasive Upwork proposal (180–230 words) for: "${projectTitle}" at ${recipientLabel}.\nStyle: first person, friendly-professional, outcome-driven. No headings, no bold, no emojis. Avoid markdown entirely.\n\nInclude, in this order:\n1) 1–2 sentence hook tailored to the project and recipient (individual vs company tone).\n2) A 2–3 step approach with realistic sequence and short timeline.\n3) 1–2 proof points with concrete results (numbers if available) drawn from the resume.\n4) An explicit rate line using the given budget if present (e.g., "My rate: ${budget || '[set rate]'}; for this scope I’d propose …") and a short availability note.\n5) Clear CTA (15‑minute call or a tiny paid kickoff milestone).\n\nIf the title is long or has multiple variants, choose the single most relevant focus based on the resume and details. Keep sentences tight; avoid generic buzzwords.\n\n${linkBlock}${budgetLine ? budgetLine + '\n' : ''}${detailsBlock}RESUME:\n${resumeText}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,

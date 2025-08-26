@@ -12,6 +12,7 @@ export default function CoverLetterPage() {
   const [loading, setLoading] = useState(false);
   const [resumeId, setResumeId] = useState<string>("");
   const [resumes, setResumes] = useState<Array<{ id: string; title: string | null; createdAt: string }>>([]);
+  const [jobLink, setJobLink] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [resumeText, setResumeText] = useState("");
   const [result, setResult] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function CoverLetterPage() {
           jobTitle, 
           company, 
           clientName: clientName || undefined,
+          jobLink: jobLink || undefined,
           jobDescription: jobDescription || undefined, 
           resumeId: resumeId || undefined,
           resumeText: resumeText || undefined
@@ -88,6 +90,13 @@ export default function CoverLetterPage() {
               label="Client Name (Optional)"
             />
           </div>
+
+          <Input
+            value={jobLink}
+            onChange={(e) => setJobLink(e.target.value)}
+            placeholder="Job link (optional, improves context) — https://..."
+            label="Job Link (Optional)"
+          />
           
           <Textarea
             value={jobDescription}

@@ -9,6 +9,7 @@ export default function UpworkProposalPage() {
   const [projectTitle, setProjectTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [projectDetails, setProjectDetails] = useState("");
+  const [jobLink, setJobLink] = useState("");
   const [budget, setBudget] = useState("");
   const [resumeId, setResumeId] = useState<string>("");
   const [resumes, setResumes] = useState<Array<{ id: string; title: string | null; createdAt: string }>>([]);
@@ -43,6 +44,7 @@ export default function UpworkProposalPage() {
           clientName: clientName || undefined,
           projectDetails: projectDetails || undefined,
           budget: budget || undefined,
+          jobLink: jobLink || undefined,
           resumeId: resumeId || undefined,
           resumeText: resumeText || undefined,
         }),
@@ -97,6 +99,13 @@ export default function UpworkProposalPage() {
             placeholder="Paste the job post / notes / constraints (optional)"
             label="Project Details (Optional)"
             className="h-32"
+          />
+
+          <Input
+            value={jobLink}
+            onChange={(e) => setJobLink(e.target.value)}
+            placeholder="Job link (optional, improves context) — https://..."
+            label="Job Link (Optional)"
           />
 
           <div>
