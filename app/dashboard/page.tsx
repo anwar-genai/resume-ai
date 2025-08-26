@@ -2,7 +2,11 @@ import Link from "next/link";
 import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { tab?: string };
+}) {
   const session = await getAuthSession();
   if (!session) {
     return (
@@ -20,8 +24,10 @@ export default async function DashboardPage() {
     prisma.coverLetter.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { resume: true } }),
   ]);
 
+  const activeTab = (searchParams?.tab === "covers" ? "covers" : "resumes") as "resumes" | "covers";
+
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="p-6 max-w-6xl mx-auto space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Your Documents</h1>
         <nav className="flex gap-3 text-sm">
@@ -30,41 +36,70 @@ export default async function DashboardPage() {
         </nav>
       </header>
 
-      <section>
-        <h2 className="text-lg font-medium mb-2">Resumes</h2>
-        <div className="grid gap-3">
+      <div className="border-b">
+        <div className="flex gap-6 text-sm">
+          <Link
+            href={"/dashboard?tab=resumes"}
+            className={`py-2 border-b-2 ${activeTab === "resumes" ? "border-black font-medium" : "border-transparent text-gray-500"}`}
+          >
+            Resumes ({resumes.length})
+          </Link>
+          <Link
+            href={"/dashboard?tab=covers"}
+            className={`py-2 border-b-2 ${activeTab === "covers" ? "border-black font-medium" : "border-transparent text-gray-500"}`}
+          >
+            Cover Letters ({letters.length})
+          </Link>
+        </div>
+      </div>
+
+      {activeTab === "resumes" ? (
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {resumes.length === 0 && <p className="text-sm text-gray-600">No resumes yet.</p>}
           {resumes.map((r) => (
-            <div key={r.id} className="rounded border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{r.title || "Untitled"} · {new Date(r.createdAt).toLocaleString()}</p>
-                <div className="flex gap-2">
-                  <Link className="underline text-sm" href={`/api/export/resume/${r.id}`}>Download</Link>
+            <div
+              key={r.id}
+              className="rounded-xl p-4 border bg-gradient-to-br from-indigo-50 to-white hover:shadow-sm transition"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{r.title || "Untitled Resume"}</p>
+                  <p className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleString()}</p>
                 </div>
+                <span className="text-[10px] px-2 py-1 rounded-full bg-indigo-100 text-indigo-700">Resume</span>
               </div>
-              <pre className="mt-3 whitespace-pre-wrap text-sm text-gray-900">{r.optimizedContent ?? r.content}</pre>
+              <div className="mt-4 flex gap-3">
+                <Link className="text-sm underline" href={`/api/export/resume/${r.id}`}>Download</Link>
+                <Link className="text-sm underline" href={`/cover-letter`}>Use for Cover Letter</Link>
+              </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-medium mb-2">Cover Letters</h2>
-        <div className="grid gap-3">
+        </section>
+      ) : (
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {letters.length === 0 && <p className="text-sm text-gray-600">No cover letters yet.</p>}
           {letters.map((c) => (
-            <div key={c.id} className="rounded border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{c.jobTitle} @ {c.company} {c.resume ? `· From: ${c.resume.title || new Date(c.resume.createdAt).toLocaleDateString()}` : ""}</p>
-                <div className="flex gap-2">
-                  <Link className="underline text-sm" href={`/api/export/cover/${c.id}`}>Download</Link>
+            <div
+              key={c.id}
+              className="rounded-xl p-4 border bg-gradient-to-br from-emerald-50 to-white hover:shadow-sm transition"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{c.jobTitle} @ {c.company}</p>
+                  <p className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</p>
+                  {c.resume && (
+                    <p className="text-xs text-gray-600 mt-1">From resume: {c.resume.title || new Date(c.resume.createdAt).toLocaleDateString()}</p>
+                  )}
                 </div>
+                <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Cover</span>
               </div>
-              <pre className="mt-3 whitespace-pre-wrap text-sm text-gray-900">{c.content}</pre>
+              <div className="mt-4 flex gap-3">
+                <Link className="text-sm underline" href={`/api/export/cover/${c.id}`}>Download</Link>
+              </div>
             </div>
           ))}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
