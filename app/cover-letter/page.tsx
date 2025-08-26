@@ -8,6 +8,7 @@ import { Input, Textarea } from "@/app/components/ui/Input";
 export default function CoverLetterPage() {
   const [jobTitle, setJobTitle] = useState("");
   const [company, setCompany] = useState("");
+  const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(false);
   const [resumeId, setResumeId] = useState<string>("");
   const [resumes, setResumes] = useState<Array<{ id: string; title: string | null; createdAt: string }>>([]);
@@ -40,6 +41,7 @@ export default function CoverLetterPage() {
         body: JSON.stringify({ 
           jobTitle, 
           company, 
+          clientName: clientName || undefined,
           jobDescription: jobDescription || undefined, 
           resumeId: resumeId || undefined,
           resumeText: resumeText || undefined
@@ -76,8 +78,14 @@ export default function CoverLetterPage() {
             <Input
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              placeholder="e.g., Microsoft"
-              label="Company"
+              placeholder="e.g., Microsoft (optional)"
+              label="Company (Optional)"
+            />
+            <Input
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="If posted by an individual, add client name (optional)"
+              label="Client Name (Optional)"
             />
           </div>
           
@@ -117,7 +125,7 @@ export default function CoverLetterPage() {
             <Button 
               type="submit" 
               variant="primary" 
-              disabled={loading || !jobTitle || !company || (!resumeId && !resumeText)}
+              disabled={loading || !jobTitle || (!company && !clientName) || (!resumeId && !resumeText)}
               glow
             >
               {loading ? "Generating..." : "Generate Cover Letter"}

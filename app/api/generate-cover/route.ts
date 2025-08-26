@@ -48,9 +48,9 @@ export async function POST(request: Request) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: "OpenAI API key missing" }, { status: 500 });
     }
-    const { jobTitle, company, jobDescription, resumeId, resumeText: providedResumeText } = await request.json();
-    if (!jobTitle || !company) {
-      return NextResponse.json({ error: "Missing jobTitle or company" }, { status: 400 });
+    const { jobTitle, company, clientName, jobDescription, resumeId, resumeText: providedResumeText } = await request.json();
+    if (!jobTitle) {
+      return NextResponse.json({ error: "Missing jobTitle" }, { status: 400 });
     }
 
     // Determine resume text priority: provided text > selected resume > latest resume
@@ -69,8 +69,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Provide resumeText or create a resume first" }, { status: 400 });
     }
 
+    // Build salutation and company label
+    const hasClient = typeof clientName === 'string' && clientName.trim().length > 0;
+    const hasCompany = typeof company === 'string' && company.trim().length > 0;
+    const companyLabel = hasCompany ? company.trim() : (hasClient ? clientName.trim() : "your organization");
+    const salutation = hasClient
+      ? `Dear ${clientName.trim()},`
+      : (hasCompany ? `Dear Hiring Manager at ${company.trim()},` : `Dear Hiring Manager,`);
+
     const jd = jobDescription ? `Here is the job description to target: \n\n${jobDescription}\n\n` : "";
-    const prompt = `Write a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${company}. Use the candidate's resume below. Be specific, avoid cliches, align skills with the role, and emphasize verifiable accomplishments. ${jd}RESUME:\n${resumeText}`;
+    const prompt = `${salutation}\n\nWrite a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${companyLabel}. Use the candidate's resume below.\n- Use a tone appropriate to the recipient (more conversational for an individual client; more formal for a company).\n- If the job title is long or contains multiple variants, select the most relevant focus based on the resume and the description.\n- Emphasize concrete, verifiable achievements; avoid cliches.\n- If the company is unknown or an individual client, avoid corporate jargon (e.g., use \"your project\" / \"your team\").\n- End with a clear next step (quick call, proposed timeline, or deliverable).\n\n${jd}RESUME:\n${resumeText}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
