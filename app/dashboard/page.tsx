@@ -20,8 +20,8 @@ export default async function DashboardPage({
 
   const userId = (session as any).userId as string;
   const [resumes, letters] = await Promise.all([
-    prisma.resume.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }),
-    prisma.coverLetter.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { resume: true } }),
+    prisma.resume.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }) as any,
+    prisma.coverLetter.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { resume: true } as any }) as any,
   ]);
 
   const activeTab = (searchParams?.tab === "covers" ? "covers" : "resumes") as "resumes" | "covers";
@@ -36,8 +36,8 @@ export default async function DashboardPage({
         </nav>
       </header>
 
-      <div className="border-b">
-        <div className="flex gap-6 text-sm">
+      <div className="border-b overflow-x-auto">
+        <div className="flex gap-6 text-sm min-w-max">
           <Link
             href={"/dashboard?tab=resumes"}
             className={`py-2 border-b-2 ${activeTab === "resumes" ? "border-black font-medium" : "border-transparent text-gray-500"}`}
@@ -54,47 +54,47 @@ export default async function DashboardPage({
       </div>
 
       {activeTab === "resumes" ? (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {resumes.length === 0 && <p className="text-sm text-gray-600">No resumes yet.</p>}
-          {resumes.map((r) => (
+          {resumes.map((r: any) => (
             <div
               key={r.id}
-              className="rounded-xl p-4 border bg-gradient-to-br from-indigo-50 to-white hover:shadow-sm transition"
+              className="rounded-xl p-4 border bg-white hover:shadow-sm transition dark:bg-zinc-900 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium">{r.title || "Untitled Resume"}</p>
-                  <p className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(r.createdAt).toLocaleString()}</p>
                 </div>
-                <span className="text-[10px] px-2 py-1 rounded-full bg-indigo-100 text-indigo-700">Resume</span>
+                <span className="text-[10px] px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">Resume</span>
               </div>
               <div className="mt-4 flex gap-3">
-                <Link className="text-sm underline" href={`/api/export/resume/${r.id}`}>Download</Link>
-                <Link className="text-sm underline" href={`/cover-letter`}>Use for Cover Letter</Link>
+                <Link className="text-sm text-indigo-700 dark:text-indigo-400 hover:underline" href={`/api/export/resume/${r.id}`}>Download</Link>
+                <Link className="text-sm text-indigo-700 dark:text-indigo-400 hover:underline" href={`/cover-letter`}>Use for Cover Letter</Link>
               </div>
             </div>
           ))}
         </section>
       ) : (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {letters.length === 0 && <p className="text-sm text-gray-600">No cover letters yet.</p>}
-          {letters.map((c) => (
+          {letters.map((c: any) => (
             <div
               key={c.id}
-              className="rounded-xl p-4 border bg-gradient-to-br from-emerald-50 to-white hover:shadow-sm transition"
+              className="rounded-xl p-4 border bg-white hover:shadow-sm transition dark:bg-zinc-900 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium">{c.jobTitle} @ {c.company}</p>
-                  <p className="text-xs text-gray-500">{new Date(c.createdAt).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(c.createdAt).toLocaleString()}</p>
                   {c.resume && (
-                    <p className="text-xs text-gray-600 mt-1">From resume: {c.resume.title || new Date(c.resume.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">From resume: {c.resume.title || new Date(c.resume.createdAt).toLocaleDateString()}</p>
                   )}
                 </div>
-                <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Cover</span>
+                <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">Cover</span>
               </div>
               <div className="mt-4 flex gap-3">
-                <Link className="text-sm underline" href={`/api/export/cover/${c.id}`}>Download</Link>
+                <Link className="text-sm text-indigo-700 dark:text-indigo-400 hover:underline" href={`/api/export/cover/${c.id}`}>Download</Link>
               </div>
             </div>
           ))}

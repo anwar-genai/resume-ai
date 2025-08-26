@@ -52,18 +52,21 @@ export default function ResumePage() {
           placeholder="Paste job description (optional, improves targeting)"
           className="w-full h-40 p-3 border rounded"
         />
-        <div className="flex gap-3">
-          <button disabled={loading || !resume} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50">
+        <div className="flex flex-wrap gap-3">
+          <button disabled={loading || !resume} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50 w-full sm:w-auto">
             {loading ? "Optimizing..." : "Optimize"}
           </button>
-          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded">
+          <button type="button" onClick={() => router.push("/cover-letter")} className="px-4 py-2 border rounded w-full sm:w-auto">
+            Generate Cover Letter
+          </button>
+          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded w-full sm:w-auto">
             Go to Dashboard
           </button>
         </div>
       </form>
 
       {result && (
-        <div className="rounded border p-4">
+        <div className="rounded-xl border p-4 bg-gradient-to-br from-indigo-50 to-white">
           <h2 className="font-medium mb-2">Optimized Resume</h2>
           <pre className="whitespace-pre-wrap text-sm">{result}</pre>
         </div>

@@ -75,18 +75,21 @@ export default function CoverLetterPage() {
             ))}
           </select>
         </div>
-        <div className="flex gap-3">
-          <button disabled={loading || !jobTitle || !company} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50">
+        <div className="flex flex-wrap gap-3">
+          <button disabled={loading || !jobTitle || !company} className="px-4 py-2 bg-black text-white rounded disabled:opacity-50 w-full sm:w-auto">
             {loading ? "Generating..." : "Generate"}
           </button>
-          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded">
+          <button type="button" onClick={() => router.push("/resume")} className="px-4 py-2 border rounded w-full sm:w-auto">
+            Optimize Resume
+          </button>
+          <button type="button" onClick={() => router.push("/dashboard")} className="px-4 py-2 border rounded w-full sm:w-auto">
             Go to Dashboard
           </button>
         </div>
       </form>
 
       {result && (
-        <div className="rounded border p-4">
+        <div className="rounded-xl border p-4 bg-gradient-to-br from-emerald-50 to-white">
           <h2 className="font-medium mb-2">Cover Letter</h2>
           <pre className="whitespace-pre-wrap text-sm">{result}</pre>
         </div>
