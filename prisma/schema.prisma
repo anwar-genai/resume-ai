@@ -34,6 +34,7 @@ model User {
   sessions       Session[]
   resumes        Resume[]
   coverLetters   CoverLetter[]
+  proposals      Proposal[]
 }
 
 model Account {
@@ -85,6 +86,7 @@ model Resume {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   coverLetters CoverLetter[]
+  proposals    Proposal[]
 
   @@index([userId, createdAt])
 }
@@ -100,6 +102,24 @@ model CoverLetter {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([resumeId])
+}
+
+model Proposal {
+  id             String   @id @default(cuid())
+  userId         String
+  resumeId       String?
+  projectTitle   String
+  clientName     String?
+  content        String   @db.Text
+  projectDetails String?  @db.Text
+  budget         String?
+  createdAt      DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])

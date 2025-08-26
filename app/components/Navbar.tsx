@@ -17,6 +17,7 @@ export default function Navbar() {
           <Link href="/dashboard" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Dashboard</Link>
           <Link href="/resume" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Resume</Link>
           <Link href="/cover-letter" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Cover Letter</Link>
+          <Link href="/upwork-proposal" className="px-3 py-1.5 rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Proposal</Link>
           <ThemeToggle />
           {authed ? (
             <button onClick={() => signOut({ callbackUrl: "/" })} className="px-3 py-1.5 border rounded-md hover:bg-white/20 dark:hover:bg-zinc-800/20 transition-colors">Sign out</button>
@@ -50,6 +51,7 @@ export default function Navbar() {
             <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
             <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/resume" onClick={() => setOpen(false)}>Resume</Link>
             <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/cover-letter" onClick={() => setOpen(false)}>Cover Letter</Link>
+            <Link className="px-3 py-2 rounded-md border border-white/20 dark:border-zinc-700/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm hover:bg-white/60 dark:hover:bg-zinc-900/60 transition-all" href="/upwork-proposal" onClick={() => setOpen(false)}>Proposal</Link>
             <div className="flex items-center justify-between pt-2">
               <ThemeToggle />
               {authed ? (
