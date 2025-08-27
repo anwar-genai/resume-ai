@@ -1,19 +1,88 @@
+"use client";
+
 import Link from "next/link";
-import { getAuthSession } from "@/lib/auth";
-import prisma from "@/lib/db";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 import Badge from "@/app/components/ui/Badge";
 import UsageDisplay from "@/app/components/UsageDisplay";
 import Skeleton, { SkeletonCard } from "@/app/components/ui/Skeleton";
+import DocumentPreview from "@/app/components/DocumentPreview";
+import { useState, useEffect, use } from "react";
 
-export default async function DashboardPage({
+export default function DashboardPage({
   searchParams,
 }: {
-  searchParams?: { tab?: string };
+  searchParams?: Promise<{ tab?: string }>;
 }) {
-  const session = await getAuthSession();
-  if (!session) {
+  const [previewDoc, setPreviewDoc] = useState<{
+    id: string;
+    type: "resume" | "cover" | "proposal";
+    title: string;
+    metadata?: any;
+  } | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<{
+    resumes: any[];
+    letters: any[];
+    proposals: any[];
+  }>({ resumes: [], letters: [], proposals: [] });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      const sessionRes = await fetch("/api/auth/session");
+      const sessionData = await sessionRes.json();
+      
+      if (!sessionData || !sessionData.user) {
+        setLoading(false);
+        return;
+      }
+      
+      setSession(sessionData);
+      
+      // Fetch documents
+      const [resumesRes, lettersRes, proposalsRes] = await Promise.all([
+        fetch("/api/user/documents?type=resumes"),
+        fetch("/api/user/documents?type=covers"),
+        fetch("/api/user/documents?type=proposals"),
+      ]);
+      
+      const [resumes, letters, proposals] = await Promise.all([
+        resumesRes.json(),
+        lettersRes.json(),
+        proposalsRes.json(),
+      ]);
+      
+      setDocuments({ resumes, letters, proposals });
+    } catch (error) {
+      console.error("Failed to load data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] p-6">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <SkeletonCard />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <GlassCard key={i} className="p-6">
+                <Skeleton variant="rectangular" height="120px" />
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || !session.user) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-6">
         <GlassCard className="max-w-md w-full p-8 text-center" glow>
@@ -38,15 +107,12 @@ export default async function DashboardPage({
     );
   }
 
-  const userId = (session as any).userId as string;
-  const [resumes, letters, proposals] = await Promise.all([
-    prisma.resume.findMany({ where: { userId }, orderBy: { createdAt: "desc" } }) as any,
-    prisma.coverLetter.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { resume: true } as any }) as any,
-    prisma.proposal.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, include: { resume: true } as any }) as any,
-  ]);
-
-  const activeTab = (searchParams?.tab === "covers" ? "covers" : searchParams?.tab === "proposals" ? "proposals" : "resumes") as "resumes" | "covers" | "proposals";
-
+  const { resumes, letters, proposals } = documents;
+  
+  // Unwrap searchParams using React.use() for Next.js 15
+  const params = searchParams ? use(searchParams) : { tab: undefined };
+  const activeTab = (params?.tab === "covers" ? "covers" : params?.tab === "proposals" ? "proposals" : "resumes") as "resumes" | "covers" | "proposals";
+  
   // Calculate stats
   const totalDocuments = resumes.length + letters.length + proposals.length;
   const recentActivity = [...resumes, ...letters, ...proposals]
@@ -67,32 +133,32 @@ export default async function DashboardPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/resume">
-              <Button variant="primary" size="md" glow>
+            <Link href="/resume" className="cursor-pointer">
+              <Button variant="primary" size="md" glow className="cursor-pointer">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 New Resume
               </Button>
             </Link>
-            <Link href="/cover-letter">
-              <Button variant="secondary" size="md">
+            <Link href="/cover-letter" className="cursor-pointer">
+              <Button variant="secondary" size="md" className="cursor-pointer">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 Cover Letter
               </Button>
-            </Link>
-            <Link href="/upwork-proposal">
-              <Button variant="secondary" size="md">
+          </Link>
+            <Link href="/upwork-proposal" className="cursor-pointer">
+              <Button variant="secondary" size="md" className="cursor-pointer">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 Proposal
               </Button>
-            </Link>
+          </Link>
           </div>
-        </header>
+      </header>
 
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-slide-up">
@@ -147,16 +213,16 @@ export default async function DashboardPage({
           </GlassCard>
         </div>
 
-        {/* Usage Display */}
+      {/* Usage Display */}
         <div className="animate-slide-up" style={{ animationDelay: "100ms" }}>
-          <UsageDisplay />
+      <UsageDisplay />
         </div>
 
         {/* Document Tabs */}
         <div className="animate-slide-up" style={{ animationDelay: "200ms" }}>
           <div className="border-b border-gray-200 dark:border-zinc-700 overflow-x-auto">
             <nav className="flex gap-8 -mb-px">
-              <Link
+          <Link
                 href="/dashboard?tab=resumes"
                 className={`
                   relative py-3 px-1 text-sm font-medium transition-colors
@@ -175,9 +241,9 @@ export default async function DashboardPage({
                 {activeTab === "resumes" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" />
                 )}
-              </Link>
+          </Link>
               
-              <Link
+          <Link
                 href="/dashboard?tab=covers"
                 className={`
                   relative py-3 px-1 text-sm font-medium transition-colors
@@ -196,9 +262,9 @@ export default async function DashboardPage({
                 {activeTab === "covers" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 dark:bg-emerald-400" />
                 )}
-              </Link>
+          </Link>
               
-              <Link
+          <Link
                 href="/dashboard?tab=proposals"
                 className={`
                   relative py-3 px-1 text-sm font-medium transition-colors
@@ -217,14 +283,14 @@ export default async function DashboardPage({
                 {activeTab === "proposals" && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400" />
                 )}
-              </Link>
+          </Link>
             </nav>
-          </div>
+      </div>
 
           {/* Content */}
           <div className="mt-8">
-            {activeTab === "resumes" ? (
-              <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      {activeTab === "resumes" ? (
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {resumes.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
@@ -255,40 +321,49 @@ export default async function DashboardPage({
                                 day: 'numeric'
                               })}
                             </p>
-                          </div>
+                </div>
                           <Badge variant="info" size="sm">Resume</Badge>
-                        </div>
+              </div>
                         <div className="mt-auto flex gap-2">
-                          <Link href={`/api/export/resume/${r.id}`} className="flex-1">
-                            <Button variant="secondary" size="sm" className="w-full">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              Download
-                            </Button>
-                          </Link>
-                          <Link href="/cover-letter" className="flex-1">
-                            <Button variant="ghost" size="sm" className="w-full">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="flex-1 cursor-pointer"
+                            onClick={() => setPreviewDoc({
+                              id: r.id,
+                              type: "resume",
+                              title: r.title || "Untitled Resume",
+                              metadata: { createdAt: r.createdAt }
+                            })}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Preview
+                          </Button>
+                          <Link href="/cover-letter" className="flex-1 cursor-pointer">
+                            <Button variant="ghost" size="sm" className="w-full cursor-pointer">
                               Use for Cover
                             </Button>
-                          </Link>
-                        </div>
-                      </GlassCard>
+                </Link>
+              </div>
+            </GlassCard>
                     </div>
                   ))
                 )}
-              </section>
-            ) : activeTab === "covers" ? (
-              <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        </section>
+      ) : activeTab === "covers" ? (
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {letters.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
                       <span className="text-2xl">✉️</span>
-                    </div>
+                </div>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">No cover letters yet</p>
                     <Link href="/cover-letter">
                       <Button variant="primary" size="sm">Create Cover Letter</Button>
-                    </Link>
+                </Link>
                   </div>
                 ) : (
                   letters.map((c: any, index: number) => (
@@ -322,22 +397,35 @@ export default async function DashboardPage({
                           </p>
                         )}
                         <div className="mt-auto">
-                          <Link href={`/api/export/cover/${c.id}`}>
-                            <Button variant="secondary" size="sm" className="w-full">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              Download
-                            </Button>
-                          </Link>
-                        </div>
-                      </GlassCard>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="w-full cursor-pointer"
+                            onClick={() => setPreviewDoc({
+                              id: c.id,
+                              type: "cover",
+                              title: `${c.jobTitle} @ ${c.company}`,
+                              metadata: {
+                                company: c.company,
+                                jobTitle: c.jobTitle,
+                                createdAt: c.createdAt
+                              }
+                            })}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View Letter
+                          </Button>
+              </div>
+            </GlassCard>
                     </div>
                   ))
                 )}
-              </section>
-            ) : (
-              <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        </section>
+      ) : (
+        <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {proposals.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
@@ -361,7 +449,7 @@ export default async function DashboardPage({
                             <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                               {p.projectTitle}
                             </h3>
-                            {p.clientName && (
+                  {p.clientName && (
                               <p className="text-sm text-gray-600 dark:text-gray-400">
                                 Client: {p.clientName}
                               </p>
@@ -373,28 +461,52 @@ export default async function DashboardPage({
                                 day: 'numeric'
                               })}
                             </p>
-                          </div>
+                </div>
                           <Badge variant="info" size="sm">Proposal</Badge>
-                        </div>
+              </div>
                         <div className="mt-auto">
-                          <a href={`/api/export/proposal/${p.id}`}>
-                            <Button variant="secondary" size="sm" className="w-full">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                              Download
-                            </Button>
-                          </a>
-                        </div>
-                      </GlassCard>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="w-full cursor-pointer"
+                            onClick={() => setPreviewDoc({
+                              id: p.id,
+                              type: "proposal",
+                              title: p.projectTitle,
+                              metadata: {
+                                clientName: p.clientName,
+                                createdAt: p.createdAt
+                              }
+                            })}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View Proposal
+                          </Button>
+              </div>
+            </GlassCard>
                     </div>
                   ))
                 )}
-              </section>
+        </section>
             )}
           </div>
         </div>
       </div>
+      
+      {/* Document Preview Modal */}
+      {previewDoc && (
+        <DocumentPreview
+          isOpen={!!previewDoc}
+          onClose={() => setPreviewDoc(null)}
+          documentId={previewDoc.id}
+          documentType={previewDoc.type}
+          title={previewDoc.title}
+          metadata={previewDoc.metadata}
+        />
+      )}
     </div>
   );
 }

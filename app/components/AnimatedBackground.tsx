@@ -7,24 +7,41 @@ export default function AnimatedBackground() {
   useEffect(() => {
     if (!ref.current) return;
     
-    // Create floating orbs
-    const orbs = Array.from({ length: 6 }, (_, i) => {
+    // Create floating orbs with more sophisticated movement
+    const orbs = Array.from({ length: 8 }, (_, i) => {
       const orb = document.createElement("div");
-      orb.className = `absolute rounded-full opacity-20 animate-pulse`;
-      orb.style.background = `radial-gradient(circle, ${
-        i % 2 === 0 ? "rgba(99,102,241,0.3)" : "rgba(16,185,129,0.3)"
-      } 0%, transparent 70%)`;
-      orb.style.width = `${Math.random() * 300 + 100}px`;
+      orb.className = `absolute rounded-full blur-xl`;
+      
+      const colors = [
+        "rgba(99,102,241,0.15)", // Indigo
+        "rgba(16,185,129,0.15)", // Emerald
+        "rgba(168,85,247,0.15)", // Purple
+        "rgba(59,130,246,0.15)", // Blue
+        "rgba(236,72,153,0.15)", // Pink
+        "rgba(251,146,60,0.15)", // Orange
+      ];
+      
+      orb.style.background = `radial-gradient(circle, ${colors[i % colors.length]} 0%, transparent 70%)`;
+      orb.style.width = `${Math.random() * 400 + 200}px`;
       orb.style.height = orb.style.width;
       orb.style.left = `${Math.random() * 100}%`;
       orb.style.top = `${Math.random() * 100}%`;
-      orb.style.animationDelay = `${Math.random() * 3}s`;
-      orb.style.animationDuration = `${Math.random() * 4 + 6}s`;
+      orb.style.filter = "blur(40px)";
+      orb.style.opacity = "0";
+      orb.style.animation = `fadeIn 2s ease-out ${i * 0.2}s forwards`;
       ref.current?.appendChild(orb);
       
-      // Animate position
+      // Animate position with smooth, organic movement
+      let time = Math.random() * Math.PI * 2;
+      const speed = 0.0001 + Math.random() * 0.0002;
+      const radiusX = 50 + Math.random() * 100;
+      const radiusY = 50 + Math.random() * 100;
+      
       const animate = () => {
-        orb.style.transform = `translate(${Math.sin(Date.now() * 0.001 + i) * 30}px, ${Math.cos(Date.now() * 0.0008 + i) * 40}px)`;
+        time += speed;
+        const x = Math.sin(time) * radiusX;
+        const y = Math.cos(time * 0.7) * radiusY;
+        orb.style.transform = `translate(${x}px, ${y}px) scale(${1 + Math.sin(time * 0.5) * 0.1})`;
         requestAnimationFrame(animate);
       };
       animate();
@@ -32,7 +49,19 @@ export default function AnimatedBackground() {
       return orb;
     });
 
-    return () => orbs.forEach(orb => orb.remove());
+    // Add CSS for fade-in animation
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes fadeIn {
+        to { opacity: 0.6; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      orbs.forEach(orb => orb.remove());
+      style.remove();
+    };
   }, []);
 
   return (

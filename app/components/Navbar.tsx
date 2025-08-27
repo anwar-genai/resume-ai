@@ -120,8 +120,8 @@ export default function Navbar() {
                   <Dropdown
                     align="right"
                     trigger={
-                      <IconButton variant="ghost" size="md">
-                        <div className="relative">
+                      <div className="relative">
+                        <IconButton variant="ghost" size="md" className="relative">
                           <svg
                             className="w-5 h-5"
                             fill="none"
@@ -135,15 +135,17 @@ export default function Navbar() {
                               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                             />
                           </svg>
+                        </IconButton>
+                        <div className="absolute -top-1 -right-1 pointer-events-none">
                           <Badge
                             variant="danger"
                             size="sm"
-                            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] p-0 flex items-center justify-center"
+                            className="min-w-[20px] h-[20px] p-0 flex items-center justify-center text-[10px] font-bold"
                           >
                             3
                           </Badge>
                         </div>
-                      </IconButton>
+                      </div>
                     }
                   >
                     <div className="p-2">
@@ -159,39 +161,40 @@ export default function Navbar() {
                   </Dropdown>
                 )}
 
-                {/* User Menu / Auth Buttons */}
-                {status === "loading" ? (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 animate-pulse" />
-                ) : status === "authenticated" ? (
-                  <Dropdown
-                    align="right"
-                    trigger={
-                      <button className="flex items-center gap-3 px-3 py-1.5 rounded-full hover:bg-white/20 dark:hover:bg-zinc-800/50 transition-colors">
-                        <Avatar
-                          src={user?.image}
-                          alt={user?.name || "User"}
-                          fallback={userInitials}
-                          size="md"
-                        />
-                        <div className="hidden sm:block text-left">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {user?.name || "User"}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {user?.email}
-                          </p>
-                        </div>
-                        <svg
-                          className="w-4 h-4 text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    }
+                {/* User Menu / Auth Buttons - Hidden on mobile, shown in mobile menu */}
+                <div className="hidden lg:block">
+                  {status === "loading" ? (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-zinc-800 animate-pulse" />
+                  ) : status === "authenticated" ? (
+                    <Dropdown
+                      align="right"
+                      trigger={
+                        <button className="flex items-center gap-3 px-3 py-1.5 rounded-full hover:bg-white/20 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer">
+                          <Avatar
+                            src={user?.image}
+                            alt={user?.name || "User"}
+                            fallback={userInitials}
+                            size="md"
+                          />
+                          <div className="hidden xl:block text-left">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {user?.name || "User"}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {user?.email}
+                            </p>
+                          </div>
+                          <svg
+                            className="w-4 h-4 text-gray-500 hidden sm:block"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      }
                   >
                     <div className="py-2">
                       <div className="px-4 py-2">
@@ -247,20 +250,21 @@ export default function Navbar() {
                       </DropdownItem>
                     </div>
                   </Dropdown>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <Link href="/login">
-                      <Button variant="ghost" size="sm">
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link href="/register">
-                      <Button variant="primary" size="sm" glow>
-                        Get Started
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <Link href="/login" className="cursor-pointer">
+                        <Button variant="ghost" size="sm">
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link href="/register" className="cursor-pointer">
+                        <Button variant="primary" size="sm" glow>
+                          Get Started
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
 
                 {/* Mobile menu button */}
                 <IconButton
@@ -300,6 +304,28 @@ export default function Navbar() {
         `}
       >
         <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-b border-white/20 dark:border-zinc-800/50 shadow-xl">
+          {/* Mobile User Info */}
+          {status === "authenticated" && (
+            <div className="px-4 py-4 border-b border-gray-200 dark:border-zinc-800">
+              <div className="flex items-center gap-3">
+                <Avatar
+                  src={user?.image}
+                  alt={user?.name || "User"}
+                  fallback={userInitials}
+                  size="md"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <nav className="px-4 py-4 space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -324,6 +350,32 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            
+            {/* Mobile Auth Buttons */}
+            {status === "authenticated" ? (
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="flex items-center gap-3 w-full px-4 py-3 text-left text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign Out
+              </button>
+            ) : (
+              <div className="pt-4 space-y-2">
+                <Link href="/login" className="block cursor-pointer">
+                  <Button variant="secondary" size="md" className="w-full">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/register" className="block cursor-pointer">
+                  <Button variant="primary" size="md" glow className="w-full">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
           </nav>
         </div>
       </div>

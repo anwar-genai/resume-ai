@@ -20,7 +20,8 @@ export default function Button({
     relative inline-flex items-center justify-center gap-2 rounded-lg font-medium
     transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 
     focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-    border backdrop-blur-md group overflow-hidden
+    border backdrop-blur-md group overflow-hidden cursor-pointer
+    hover:shadow-lg active:transform active:scale-[0.98]
   `;
   
   const variants = {
