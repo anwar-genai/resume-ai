@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import Providers from "@/app/providers";
 import AnimatedBackground from "@/app/components/AnimatedBackground";
+import PageTransition from "@/app/components/PageTransition";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
         <Providers>
           <AnimatedBackground />
           <Navbar />
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </Providers>
       </body>
     </html>

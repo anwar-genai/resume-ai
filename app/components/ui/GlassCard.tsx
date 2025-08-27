@@ -15,16 +15,26 @@ export default function GlassCard({ children, className = "", hover = true, glow
         relative rounded-xl border border-white/20 dark:border-zinc-700/50
         bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md
         shadow-lg shadow-black/5 dark:shadow-black/20
-        ${hover ? "hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/30 hover:-translate-y-0.5" : ""}
+        ${hover ? "hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/30 hover:-translate-y-0.5 hover:border-white/30 dark:hover:border-zinc-600/50" : ""}
         ${glow ? "ring-1 ring-indigo-500/20 shadow-indigo-500/10" : ""}
-        transition-all duration-300 ease-out
+        transition-all duration-300 ease-out group
         ${className}
       `}
     >
-      {glow && (
-        <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-indigo-500/20 to-emerald-500/20 blur opacity-30 -z-10" />
+      {/* Gradient overlay on hover */}
+      {hover && (
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       )}
-      {children}
+      
+      {/* Glow effect */}
+      {glow && (
+        <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-indigo-500/20 to-emerald-500/20 blur opacity-30 -z-10 animate-pulse-slow" />
+      )}
+      
+      {/* Content */}
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   );
 }
