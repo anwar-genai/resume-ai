@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AnimatedBackground from "@/app/components/AnimatedBackground";
 import Button from "@/app/components/ui/Button";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Badge from "@/app/components/ui/Badge";
@@ -40,6 +41,8 @@ const stats = [
 export default function Home() {
   return (
     <main className="min-h-[calc(100vh-64px)]">
+      {/* Background animation only on home */}
+      <AnimatedBackground />
       {/* Hero Section */}
       <section className="relative px-6 pt-16 pb-24 overflow-hidden">
         <div className="max-w-6xl mx-auto">

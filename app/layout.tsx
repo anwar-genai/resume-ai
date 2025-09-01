@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/app/components/Navbar";
 import Providers from "@/app/providers";
-import AnimatedBackground from "@/app/components/AnimatedBackground";
 import PageTransition from "@/app/components/PageTransition";
 
 const geistSans = Geist({
@@ -30,7 +29,6 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
-          <AnimatedBackground />
           <Navbar />
           <PageTransition>
             {children}

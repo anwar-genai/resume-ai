@@ -3,16 +3,17 @@ import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { generatePDF, generateDOCX } from "@/lib/pdf-generator";
 
-interface Params { params: { id: string } }
+interface Params { params: Promise<{ id: string }> }
 
 export async function GET(request: NextRequest, { params }: Params) {
+  const { id } = await params;
   const session = await getAuthSession();
   if (!session || !(session as any).userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   
   const userId = (session as any).userId as string;
-  const doc = await prisma.proposal.findUnique({ where: { id: params.id } });
+  const doc = await prisma.proposal.findUnique({ where: { id } });
   
   if (!doc || doc.userId !== userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

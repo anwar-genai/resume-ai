@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 import Badge from "@/app/components/ui/Badge";
 import UsageDisplay from "@/app/components/UsageDisplay";
 import Skeleton, { SkeletonCard } from "@/app/components/ui/Skeleton";
-import DocumentPreview from "@/app/components/DocumentPreview";
+const DocumentPreview = dynamic(() => import("@/app/components/DocumentPreview"), { ssr: false });
 import { useState, useEffect, use } from "react";
 
 export default function DashboardPage({

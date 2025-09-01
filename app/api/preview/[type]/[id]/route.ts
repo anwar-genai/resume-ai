@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { type: string; id: string } }
+  { params }: { params: Promise<{ type: string; id: string }> }
 ) {
   const session = await getAuthSession();
   if (!session) {
@@ -12,7 +12,7 @@ export async function GET(
   }
 
   const userId = (session as any).userId as string;
-  const { type, id } = params;
+  const { type, id } = await params;
 
   try {
     let document;

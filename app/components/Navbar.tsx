@@ -29,12 +29,17 @@ export default function Navbar() {
     : user?.email?.[0]?.toUpperCase() || "?";
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 10);
+        ticking = false;
+      });
     };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", onScroll, { passive: true } as any);
+    return () => window.removeEventListener("scroll", onScroll as any);
   }, []);
 
   useEffect(() => {

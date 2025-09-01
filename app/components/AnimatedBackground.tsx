@@ -6,9 +6,12 @@ export default function AnimatedBackground() {
 
   useEffect(() => {
     if (!ref.current) return;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const reduceMotion = mediaQuery.matches;
     
-    // Create floating orbs with more sophisticated movement
-    const orbs = Array.from({ length: 8 }, (_, i) => {
+    // Create floating orbs with reduced count on low-power devices
+    const orbCount = reduceMotion ? 0 : Math.max(4, Math.min(6, Math.floor((window.innerWidth * window.devicePixelRatio) / 800)));
+    const orbs = Array.from({ length: orbCount }, (_, i) => {
       const orb = document.createElement("div");
       orb.className = `absolute rounded-full blur-xl`;
       
@@ -22,29 +25,24 @@ export default function AnimatedBackground() {
       ];
       
       orb.style.background = `radial-gradient(circle, ${colors[i % colors.length]} 0%, transparent 70%)`;
-      orb.style.width = `${Math.random() * 400 + 200}px`;
+      orb.style.width = `${Math.random() * 280 + 160}px`;
       orb.style.height = orb.style.width;
       orb.style.left = `${Math.random() * 100}%`;
       orb.style.top = `${Math.random() * 100}%`;
       orb.style.filter = "blur(40px)";
       orb.style.opacity = "0";
-      orb.style.animation = `fadeIn 2s ease-out ${i * 0.2}s forwards`;
+      orb.style.animation = `fadeIn 1.2s ease-out ${i * 0.15}s forwards`;
       ref.current?.appendChild(orb);
       
-      // Animate position with smooth, organic movement
-      let time = Math.random() * Math.PI * 2;
-      const speed = 0.0001 + Math.random() * 0.0002;
-      const radiusX = 50 + Math.random() * 100;
-      const radiusY = 50 + Math.random() * 100;
-      
-      const animate = () => {
-        time += speed;
-        const x = Math.sin(time) * radiusX;
-        const y = Math.cos(time * 0.7) * radiusY;
-        orb.style.transform = `translate(${x}px, ${y}px) scale(${1 + Math.sin(time * 0.5) * 0.1})`;
-        requestAnimationFrame(animate);
-      };
-      animate();
+      if (!reduceMotion) {
+        // Animate position with a single shared RAF
+        (orb as any).__state = {
+          time: Math.random() * Math.PI * 2,
+          speed: 0.00008 + Math.random() * 0.00015,
+          radiusX: 40 + Math.random() * 80,
+          radiusY: 40 + Math.random() * 80,
+        };
+      }
       
       return orb;
     });
@@ -58,9 +56,25 @@ export default function AnimatedBackground() {
     `;
     document.head.appendChild(style);
 
+    // Single RAF loop to update all orbs
+    let raf = 0;
+    const tick = () => {
+      for (const orb of orbs) {
+        const state = (orb as any).__state;
+        if (!state) continue;
+        state.time += state.speed;
+        const x = Math.sin(state.time) * state.radiusX;
+        const y = Math.cos(state.time * 0.7) * state.radiusY;
+        orb.style.transform = `translate(${x}px, ${y}px) scale(${1 + Math.sin(state.time * 0.5) * 0.1})`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    if (!reduceMotion && orbs.length) raf = requestAnimationFrame(tick);
+
     return () => {
       orbs.forEach(orb => orb.remove());
       style.remove();
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 

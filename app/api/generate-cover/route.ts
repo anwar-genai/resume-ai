@@ -55,6 +55,7 @@ export async function POST(request: Request) {
 
     // Determine resume text priority: provided text > selected resume > latest resume
     let resumeText: string | null = null;
+    let resumeIdToAttach: string | undefined = undefined;
 
     if (typeof providedResumeText === "string" && providedResumeText.trim().length > 0) {
       resumeText = providedResumeText.trim();
@@ -63,6 +64,9 @@ export async function POST(request: Request) {
         ? await prisma.resume.findFirst({ where: { id: resumeId, userId } })
         : await prisma.resume.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } });
       resumeText = baseResume?.optimizedContent || baseResume?.content || null;
+      if (baseResume?.id) {
+        resumeIdToAttach = baseResume.id;
+      }
     }
 
     if (!resumeText) {
@@ -108,7 +112,7 @@ export async function POST(request: Request) {
     }
 
     const data: any = { userId, jobTitle, company, content: letter };
-    if (baseResume?.id) data.resumeId = baseResume.id;
+    if (resumeIdToAttach) data.resumeId = resumeIdToAttach;
     if (jobDescription) data.jobDescription = jobDescription;
     const saved = await prisma.coverLetter.create({ data });
 
