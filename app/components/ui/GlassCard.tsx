@@ -13,9 +13,9 @@ export default function GlassCard({ children, className = "", hover = true, glow
     <div
       className={`
         relative rounded-xl border border-white/20 dark:border-zinc-700/50
-        bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md
+        bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md backdrop-saturate-150
         shadow-lg shadow-black/5 dark:shadow-black/20
-        ${hover ? "hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/30 hover:-translate-y-0.5 hover:border-white/30 dark:hover:border-zinc-600/50" : ""}
+        ${hover ? "hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/30 hover:-translate-y-1 hover:border-white/30 dark:hover:border-zinc-600/50 hover:bg-white/70 dark:hover:bg-zinc-900/70" : ""}
         ${glow ? "ring-1 ring-indigo-500/20 shadow-indigo-500/10" : ""}
         transition-all duration-300 ease-out group
         ${className}

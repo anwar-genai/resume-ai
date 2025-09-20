@@ -21,7 +21,8 @@ export default function Button({
     transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 
     focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
     border backdrop-blur-md group overflow-hidden cursor-pointer
-    hover:shadow-lg active:transform active:scale-[0.98]
+    hover:shadow-lg active:transform active:scale-[0.98] active:duration-75
+    hover:duration-200
   `;
   
   const variants = {
@@ -32,14 +33,14 @@ export default function Button({
       active:scale-[0.98] active:shadow-md
     `,
     secondary: `
-      bg-white/60 dark:bg-zinc-900/60 border-white/20 dark:border-zinc-700/50
-      hover:bg-white/80 dark:hover:bg-zinc-900/80 hover:shadow-md hover:-translate-y-0.5
-      focus-visible:ring-indigo-500 text-gray-900 dark:text-gray-100
+      bg-white/70 dark:bg-zinc-900/70 border-white/20 dark:border-zinc-700/50
+      hover:bg-white/90 dark:hover:bg-zinc-900/90 hover:shadow-md hover:-translate-y-0.5
+      focus-visible:ring-indigo-500 text-gray-900 dark:text-white
       active:scale-[0.98]
     `,
     ghost: `
-      bg-transparent border-transparent hover:bg-white/20 dark:hover:bg-zinc-800/20
-      focus-visible:ring-indigo-500 text-gray-700 dark:text-gray-300
+      bg-transparent border-transparent hover:bg-white/20 dark:hover:bg-zinc-800/30
+      focus-visible:ring-indigo-500 text-gray-700 dark:text-gray-200
       active:scale-[0.98]
     `,
     danger: `

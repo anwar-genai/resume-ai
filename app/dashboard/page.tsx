@@ -95,7 +95,7 @@ export default function DashboardPage({
           <h1 className="text-2xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500">
             Sign In Required
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
             You need to be signed in to view your documents and access all features.
           </p>
           <Link href="/login">
@@ -129,7 +129,7 @@ export default function DashboardPage({
             <h1 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-emerald-500 animate-fade-in">
               Welcome back, {session.user?.name || "User"}!
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-300">
               Manage your AI-generated documents and create new ones.
             </p>
           </div>
@@ -166,7 +166,7 @@ export default function DashboardPage({
           <GlassCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Documents</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Documents</p>
                 <p className="text-3xl font-bold mt-1">{totalDocuments}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500/20 to-emerald-500/20 flex items-center justify-center">
@@ -180,7 +180,7 @@ export default function DashboardPage({
           <GlassCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Resumes</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Resumes</p>
                 <p className="text-3xl font-bold mt-1">{resumes.length}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
@@ -192,7 +192,7 @@ export default function DashboardPage({
           <GlassCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Cover Letters</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Cover Letters</p>
                 <p className="text-3xl font-bold mt-1">{letters.length}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
@@ -204,7 +204,7 @@ export default function DashboardPage({
           <GlassCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Proposals</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Proposals</p>
                 <p className="text-3xl font-bold mt-1">{proposals.length}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
@@ -229,7 +229,7 @@ export default function DashboardPage({
                   relative py-3 px-1 text-sm font-medium transition-colors
                   ${activeTab === "resumes" 
                     ? "text-indigo-600 dark:text-indigo-400" 
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   }
                 `}
               >
@@ -250,7 +250,7 @@ export default function DashboardPage({
                   relative py-3 px-1 text-sm font-medium transition-colors
                   ${activeTab === "covers" 
                     ? "text-emerald-600 dark:text-emerald-400" 
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   }
                 `}
               >
@@ -271,7 +271,7 @@ export default function DashboardPage({
                   relative py-3 px-1 text-sm font-medium transition-colors
                   ${activeTab === "proposals" 
                     ? "text-purple-600 dark:text-purple-400" 
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   }
                 `}
               >
@@ -297,7 +297,7 @@ export default function DashboardPage({
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
                       <span className="text-2xl">📄</span>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">No resumes yet</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">No resumes yet</p>
                     <Link href="/resume">
                       <Button variant="primary" size="sm">Create Your First Resume</Button>
                     </Link>
@@ -312,7 +312,7 @@ export default function DashboardPage({
                       <GlassCard className="p-5 h-full flex flex-col" hover>
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                               {r.title || "Untitled Resume"}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -361,7 +361,7 @@ export default function DashboardPage({
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
                       <span className="text-2xl">✉️</span>
                 </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">No cover letters yet</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">No cover letters yet</p>
                     <Link href="/cover-letter">
                       <Button variant="primary" size="sm">Create Cover Letter</Button>
                 </Link>
@@ -376,10 +376,10 @@ export default function DashboardPage({
                       <GlassCard className="p-5 h-full flex flex-col" hover>
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
                               {c.jobTitle}
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
                               @ {c.company}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -432,7 +432,7 @@ export default function DashboardPage({
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
                       <span className="text-2xl">💼</span>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">No proposals yet</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">No proposals yet</p>
                     <Link href="/upwork-proposal">
                       <Button variant="primary" size="sm">Create Proposal</Button>
                     </Link>
@@ -447,11 +447,11 @@ export default function DashboardPage({
                       <GlassCard className="p-5 h-full flex flex-col" hover>
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                               {p.projectTitle}
                             </h3>
                   {p.clientName && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
                                 Client: {p.clientName}
                               </p>
                             )}

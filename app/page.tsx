@@ -53,13 +53,13 @@ export default function Home() {
             </Badge>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
-              <span className="block text-gray-900 dark:text-gray-100">Transform Your</span>
+              <span className="block text-gray-900 dark:text-white">Transform Your</span>
               <span className="block mt-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 animate-float">
                 Career Journey
               </span>
             </h1>
             
-            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-200 max-w-3xl mx-auto leading-relaxed">
               Create stunning resumes, compelling cover letters, and winning proposals with the power of artificial intelligence.
             </p>
             
@@ -86,9 +86,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Floating elements */}
+          {/* Enhanced floating elements */}
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "2s" }} />
+          <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-gradient-to-br from-pink-500/10 to-rose-500/10 rounded-full blur-2xl animate-float" style={{ animationDelay: "4s" }} />
         </div>
       </section>
 
@@ -105,7 +106,7 @@ export default function Home() {
                 <p className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-transparent">
                   {stat.number}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{stat.label}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -116,10 +117,10 @@ export default function Home() {
       <section className="px-6 py-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Everything You Need to <span className="bg-gradient-to-r from-indigo-500 to-emerald-500 bg-clip-text text-transparent">Succeed</span>
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Our AI-powered platform provides all the tools you need to create professional documents that get results.
             </p>
           </div>
@@ -135,10 +136,10 @@ export default function Home() {
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                     <span className="text-2xl">{feature.icon}</span>
                   </div>
-                  <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
+                  <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {feature.description}
                   </p>
                 </GlassCard>
@@ -152,13 +153,14 @@ export default function Home() {
       <section className="px-6 py-24 bg-gradient-to-t from-gray-50/50 dark:from-zinc-900/50 to-transparent">
         <div className="max-w-4xl mx-auto text-center">
           <GlassCard className="p-12" glow>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-indigo-500/5 to-emerald-500/5 pointer-events-none" />
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6 relative z-10">
               Ready to <span className="bg-gradient-to-r from-indigo-500 to-emerald-500 bg-clip-text text-transparent">Level Up</span> Your Career?
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto relative z-10">
               Join thousands of professionals who have transformed their job search with our AI-powered tools.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
               <Link href="/register">
                 <Button variant="primary" size="lg" glow className="min-w-[200px]">
                   Start Creating Now
@@ -170,7 +172,7 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-6 relative z-10">
               No credit card required • Free tier available • Cancel anytime
             </p>
           </GlassCard>
