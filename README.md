@@ -6,10 +6,10 @@ AI-powered Resume & Cover Letter Generator built with Next.js 14 (App Router), T
 Below are feature demos placed alongside their respective routes/flows.
  
 **Home view (/)**
-![App Overview](public/screenshots/Overview.png)
+![App Overview](public/screenshots/overview.png)
 
 **Dashboard (/dashboard)**
-![Dashboard](public/screenshots/Dashboard.png)
+![Dashboard](public/screenshots/dashboard.png)
 
 **Resume Optimizer (/resume)**
 ![Resume Optimizer](public/screenshots/ResumeOptimizer.png)
