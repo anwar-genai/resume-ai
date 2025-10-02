@@ -77,6 +77,8 @@ export async function POST(request: Request) {
     const hasClient = typeof clientName === 'string' && clientName.trim().length > 0;
     const hasCompany = typeof company === 'string' && company.trim().length > 0;
     const companyLabel = hasCompany ? company.trim() : (hasClient ? clientName.trim() : "your organization");
+    // Ensure we always persist a non-empty company value to satisfy Prisma schema
+    const companyToPersist = hasCompany ? company.trim() : (hasClient ? clientName.trim() : "Unknown");
     const salutation = hasClient
       ? `Dear ${clientName.trim()},`
       : (hasCompany ? `Dear Hiring Manager at ${company.trim()},` : `Dear Hiring Manager,`);
@@ -111,7 +113,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No content generated" }, { status: 502 });
     }
 
-    const data: any = { userId, jobTitle, company, content: letter };
+    const data: any = { userId, jobTitle, company: companyToPersist, content: letter };
     if (resumeIdToAttach) data.resumeId = resumeIdToAttach;
     if (jobDescription) data.jobDescription = jobDescription;
     const saved = await prisma.coverLetter.create({ data });

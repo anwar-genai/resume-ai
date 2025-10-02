@@ -262,7 +262,7 @@ export default function CoverLetterPage() {
                 type="submit" 
                 variant="primary" 
                 size="lg"
-                disabled={loading || !jobTitle || (!company && !clientName) || (!resumeId && !resumeText)}
+                disabled={loading || !jobTitle || (!resumeId && !resumeText)}
                 glow
                 className="min-w-[200px]"
               >
