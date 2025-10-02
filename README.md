@@ -3,10 +3,21 @@
 AI-powered Resume & Cover Letter Generator built with Next.js 14 (App Router), TypeScript, TailwindCSS, Prisma (PostgreSQL), NextAuth, and OpenAI.
 
 ### Screenshots
+**Home view**
 
-![App Overview](./public/screenshots/overview.png)
+![App Overview](./public/screenshots/Overview.png)
 
-![Dashboard](./public/screenshots/dashboard.png)
+**Dashboard**
+![Dashboard](./public/screenshots/Dashboard.png)
+
+**Resume Optimizer**
+![Resume Optimizer](./public/screenshots/ResumeOptimizer.png)
+
+**Cover Letter**
+![Cover Letter](./public/screenshots/CoverLetter.png)
+
+**Proposal**
+![Proposal](./public/screenshots/Proposal.png)
 
 ### Features
 
