@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { checkUsageLimit } from "@/lib/usage";
+import prisma from "@/lib/db";
 
 export async function GET() {
   const session = await getAuthSession();
@@ -10,21 +11,30 @@ export async function GET() {
 
   try {
     const userId = (session as any).userId as string;
-    
+
     // Get usage for both resume and cover letter
-    const [resumeUsage, coverUsage] = await Promise.all([
+    const [resumeUsage, coverUsage, sub] = await Promise.all([
       checkUsageLimit(userId, 'resume'),
-      checkUsageLimit(userId, 'cover')
+      checkUsageLimit(userId, 'cover'),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { subscriptionStatus: true, subscriptionEndsAt: true },
+      }),
     ]);
 
     return NextResponse.json({
+      plan: resumeUsage.plan,
+      subscriptionStatus: sub?.subscriptionStatus ?? null,
+      subscriptionEndsAt: sub?.subscriptionEndsAt ?? null,
       resume: {
         remaining: resumeUsage.remainingResumes,
+        remainingDaily: resumeUsage.remainingDailyResumes,
         periodEnd: resumeUsage.periodEnd,
         canProceed: resumeUsage.canProceed,
       },
       cover: {
         remaining: coverUsage.remainingCovers,
+        remainingDaily: coverUsage.remainingDailyCovers,
         periodEnd: coverUsage.periodEnd,
         canProceed: coverUsage.canProceed,
       },

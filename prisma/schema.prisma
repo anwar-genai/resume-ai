@@ -21,7 +21,7 @@ model User {
   emailVerified  DateTime?
   createdAt      DateTime  @default(now())
   
-  // Usage control fields
+  // Usage control fields (monthly)
   resumeCount    Int       @default(0)
   coverCount     Int       @default(0)
   monthlyResumeLimit  Int  @default(10)   // Free tier: 10 resumes per month
@@ -29,7 +29,19 @@ model User {
   currentPeriodStart  DateTime @default(now())
   isBlocked      Boolean   @default(false)
   blockReason    String?
-  
+
+  // Daily safety caps (reset each calendar day)
+  dailyResumeCount  Int       @default(0)
+  dailyCoverCount   Int       @default(0)
+  currentDayStart   DateTime  @default(now())
+
+  // Subscription (Polar)
+  plan                String    @default("free")  // "free" | "pro"
+  polarCustomerId     String?   @unique
+  polarSubscriptionId String?
+  subscriptionStatus  String?   // active | canceled | revoked | past_due
+  subscriptionEndsAt  DateTime?
+
   accounts       Account[]
   sessions       Session[]
   resumes        Resume[]
