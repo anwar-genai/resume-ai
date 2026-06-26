@@ -27,7 +27,8 @@ Reuse the verified Resend domain (send from `@beyondlex.ai`) and a Zoho
 
 ## Stage 2 — Vercel (deploy to *.vercel.app first)
 
-1. Import the GitHub repo. Framework auto-detects as Next.js.
+1. Import the GitHub repo as a **new Project** under the existing beyondlex Vercel
+   account/team (no separate account needed). Framework auto-detects as Next.js.
 2. Add every env var from the table below (Project → Settings → Environment Variables).
    Start with `POLAR_SERVER=sandbox` and `REQUIRE_EMAIL_VERIFICATION=false`.
 3. Deploy. Note the `your-app.vercel.app` URL and set `NEXTAUTH_URL` /
@@ -57,8 +58,12 @@ Still on Polar **sandbox**, verification off. Smoke-test end to end:
 
 `beyondlex.ai` already has Resend (sending) and Zoho (receiving) set up, so this is light:
 
-1. **Vercel**: add domain `resume.beyondlex.ai` → add the single **CNAME** it shows at
-   your DNS host. (Don't touch the root domain's existing MX/SPF/DKIM records.)
+1. **Vercel**: add domain `resume.beyondlex.ai` to the project. Then in **Cloudflare DNS**
+   (where beyondlex.ai is managed) add the record Vercel shows — typically:
+   - Type **CNAME**, Name `resume`, Target `cname.vercel-dns.com`, **Proxy status: DNS
+     only (grey cloud)**. Proxying (orange cloud) through Cloudflare in front of Vercel
+     commonly breaks SSL/causes redirect loops — leave it grey so Vercel manages the cert.
+   - Don't touch the root domain's existing MX/SPF/DKIM records.
 2. **Resend**: no new domain to verify — `beyondlex.ai` is already verified. Create a
    **separate API key** for this app (revocable independently) → `RESEND_API_KEY`. Set
    `FROM_EMAIL="Beyondlex Resume <noreply@beyondlex.ai>"`.
