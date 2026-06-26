@@ -115,10 +115,10 @@ gone — cover/proposal use pasted text), and polished register/login UX (auto s
 ### Product/launch phases
 - Conversion: turn the 429 "limit reached" responses into a friendly in-app upgrade prompt
   linking to `/pricing`.
-- Launch: fix pre-existing build-blocking TS errors (`app/api/upload-resume`,
-  `app/components/Particles.tsx`, `app/api/preview`); deploy (Vercel + managed Postgres
-  e.g. Neon/Supabase); complete Polar production KYC + payout (Payoneer/Wise — operator is
-  in Pakistan, so no Stripe); switch `POLAR_SERVER=production` with prod token/webhook.
+- Launch: deploy (Vercel + managed Postgres e.g. Neon/Supabase); complete Polar production
+  KYC + payout (Payoneer/Wise — operator is in Pakistan, so no Stripe); switch
+  `POLAR_SERVER=production` with prod token/webhook. (The previously build-blocking TS
+  errors in `upload-resume`, `Particles.tsx`, and `preview` are now fixed — `tsc` is clean.)
 
 ## Constraints
 - Operator is in **Pakistan** → Stripe unavailable. Billing/payouts go through **Polar**

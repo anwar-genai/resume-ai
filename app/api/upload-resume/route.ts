@@ -54,10 +54,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "PDF parsing failed", ...devDetail(e2) }, { status: 500 });
       }
     }
-
-    if (!text) return NextResponse.json({ error: "Could not extract text from PDF" }, { status: 422 });
-
-    return NextResponse.json({ text });
   } catch (e: any) {
     console.error("Upload error:", e);
     return NextResponse.json({ error: "Upload failed", ...devDetail(e) }, { status: 500 });

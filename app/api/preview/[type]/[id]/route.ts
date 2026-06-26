@@ -44,11 +44,10 @@ export async function GET(
       return NextResponse.json({ error: "Document not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       content: document.content,
       metadata: {
         createdAt: document.createdAt,
-        updatedAt: document.updatedAt,
       }
     });
   } catch (error) {

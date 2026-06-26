@@ -5,10 +5,14 @@ export default function Particles() {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const canvasEl = ref.current;
+    if (!canvasEl) return;
+    const ctxRaw = canvasEl.getContext("2d");
+    if (!ctxRaw) return;
+    // Re-bind to non-null locals so the nested resize()/tick() closures keep
+    // the narrowed types.
+    const canvas = canvasEl;
+    const ctx = ctxRaw;
 
     let raf = 0;
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
