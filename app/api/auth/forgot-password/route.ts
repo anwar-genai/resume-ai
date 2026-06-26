@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import prisma from "@/lib/db";
 import { sendEmail, generatePasswordResetEmailTemplate } from "@/lib/email";
 import { generateToken, getBaseUrl } from "@/lib/tokens";
+import { checkRateLimit, getClientIp, forgotPasswordLimiter } from "@/lib/ratelimit";
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(await headers());
+    const rl = await checkRateLimit(forgotPasswordLimiter, `forgot:${ip}`);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
+    }
+
     const { email } = await request.json();
 
     if (!email) {
@@ -27,9 +38,10 @@ export async function POST(request: Request) {
     // Generate password reset token
     const token = await generateToken(email, 'password_reset');
     
-    // Create reset URL (prefer request origin)
-    const reqUrl = new URL(request.url);
-    const baseUrl = `${reqUrl.protocol}//${reqUrl.host}` || getBaseUrl();
+    // Build the reset URL from a TRUSTED base only. Using the request Host
+    // header here would let an attacker forge it and receive a victim's reset
+    // token via a poisoned link (host-header injection → account takeover).
+    const baseUrl = getBaseUrl();
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     // Send password reset email

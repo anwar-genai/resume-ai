@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
+import { checkRateLimit, getClientIp, registerLimiter } from "@/lib/ratelimit";
 // Email verification disabled by request
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(await headers());
+    const rl = await checkRateLimit(registerLimiter, `register:${ip}`);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Too many sign-up attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+      );
+    }
+
     const { email, password } = await request.json();
     if (!email || !password || password.length < 6) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 400 });
