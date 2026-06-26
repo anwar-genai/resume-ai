@@ -79,7 +79,10 @@ export default function PrivacyPage() {
             <h2 className="font-semibold text-gray-900 dark:text-white mb-1">Contact</h2>
             <p>
               Questions about your data or this policy? Contact us at{" "}
-              <span className="font-medium">[your support email]</span>.
+              <a className="underline hover:text-indigo-600" href="mailto:resume@beyondlex.ai">
+                resume@beyondlex.ai
+              </a>
+              .
             </p>
           </section>
         </div>

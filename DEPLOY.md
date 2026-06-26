@@ -6,9 +6,11 @@ Deploy target: **Vercel** (Next.js) + **Neon** (managed Postgres). Email: **Rese
 Deploy in this order so the riskiest, hardest-to-test pieces are validated first. You
 can run the whole thing on the free `*.vercel.app` URL before attaching a domain.
 
-Domain: use **numlian.com** for this product (keep `ustbian.com` for the separate uni
-app). App at `numlian.com` or `resume.numlian.com`; sending on `send.numlian.com`;
-receiving (support@) on `numlian.com`.
+Domain: **`resume.beyondlex.ai`** — this is a beyondlex company product. The
+`beyondlex.ai` domain already has its website, **Resend** (sending) and **Zoho**
+(receiving) configured, so the only new DNS record is the `resume.` CNAME for Vercel.
+Reuse the verified Resend domain (send from `@beyondlex.ai`) and a Zoho
+`resume@beyondlex.ai` mailbox for replies/contact.
 
 ---
 
@@ -51,21 +53,21 @@ Still on Polar **sandbox**, verification off. Smoke-test end to end:
 - customer portal (manage/cancel) → cancel banner shows
 - export data, then delete a throwaway account
 
-## Stage 4 — Domain + email
+## Stage 4 — Domain + email (mostly already done)
 
-1. **Vercel**: add domain `resume.numlian.com` (or root `numlian.com`) → add the CNAME/A
-   records it shows at your DNS host.
-2. **Resend**: add domain `send.numlian.com` → add its SPF + DKIM (+ DMARC) records →
-   verify. Then set `FROM_EMAIL="resume-ai <noreply@send.numlian.com>"`.
-3. **Zoho Mail** (receiving): add `numlian.com` → add the **MX** records + verification
-   TXT → create `support@numlian.com`. Use it as the Reply-To / privacy-page contact.
-4. Update env to the real domain and flip the email gate on:
-   - `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` = `https://resume.numlian.com`
+`beyondlex.ai` already has Resend (sending) and Zoho (receiving) set up, so this is light:
+
+1. **Vercel**: add domain `resume.beyondlex.ai` → add the single **CNAME** it shows at
+   your DNS host. (Don't touch the root domain's existing MX/SPF/DKIM records.)
+2. **Resend**: no new domain to verify — `beyondlex.ai` is already verified. Create a
+   **separate API key** for this app (revocable independently) → `RESEND_API_KEY`. Set
+   `FROM_EMAIL="Beyondlex Resume <noreply@beyondlex.ai>"`.
+3. **Zoho**: create a `resume@beyondlex.ai` (or `support@`) mailbox/alias for replies and
+   the privacy-page contact. No MX changes.
+4. Update env to the real domain and turn the email gate on:
+   - `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` = `https://resume.beyondlex.ai`
    - remove `REQUIRE_EMAIL_VERIFICATION` (defaults on)
    - Re-test real verification + password-reset emails.
-
-> DNS: Resend records live on the `send.` subdomain; Zoho MX live on the root. They don't
-> conflict. Keep one SPF record per host.
 
 ## Stage 5 — Polar production
 
@@ -73,7 +75,7 @@ Still on Polar **sandbox**, verification off. Smoke-test end to end:
 2. Create **production** Pro and Power recurring products.
 3. Set: `POLAR_SERVER=production`, prod `POLAR_ACCESS_TOKEN`, prod
    `POLAR_PRODUCT_ID_PRO` / `POLAR_PRODUCT_ID_POWER`.
-4. Create a **production webhook** → `https://resume.numlian.com/api/webhooks/polar`
+4. Create a **production webhook** → `https://resume.beyondlex.ai/api/webhooks/polar`
    (Format: **Raw**) → copy its secret to `POLAR_WEBHOOK_SECRET`.
 5. Do one real paid upgrade to confirm the live webhook flips the plan.
 
@@ -96,7 +98,7 @@ Still on Polar **sandbox**, verification off. Smoke-test end to end:
 | `OPENAI_API_KEY` | OpenAI | — |
 | `OPENAI_MODEL` | optional (default `gpt-4o-mini`) | — |
 | `RESEND_API_KEY` | Resend | — |
-| `FROM_EMAIL` | `resume-ai <noreply@send.numlian.com>` | sandbox → real domain |
+| `FROM_EMAIL` | `Beyondlex Resume <noreply@beyondlex.ai>` | — (Resend domain already verified) |
 | `ADMIN_EMAILS` | comma-separated admin emails | — |
 | `REQUIRE_EMAIL_VERIFICATION` | `false` for staging; unset (on) for prod | yes |
 | `UPSTASH_REDIS_REST_URL` | Upstash REST URL | — |
@@ -111,7 +113,7 @@ Still on Polar **sandbox**, verification off. Smoke-test end to end:
 Use the Neon **direct** URL only when running `prisma migrate deploy`.
 
 Phase 5 (Google OAuth) will add `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, with the
-authorized redirect URI `https://resume.numlian.com/api/auth/callback/google`.
+authorized redirect URI `https://resume.beyondlex.ai/api/auth/callback/google`.
 
 ## Gotchas specific to this app
 
