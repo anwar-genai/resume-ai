@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { polar, productIdForPlan } from "@/lib/polar";
 import { isPlanId } from "@/lib/plans";
+import { devDetail } from "@/lib/http";
 
 // GET /api/checkout?plan=pro|power
 // Creates a Polar checkout session for the chosen paid plan and redirects the
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error("Polar checkout error:", error);
     return NextResponse.json(
-      { error: "Failed to create checkout", detail: error?.message ?? "" },
+      { error: "Failed to create checkout", ...devDetail(error) },
       { status: 500 }
     );
   }

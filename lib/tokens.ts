@@ -3,6 +3,13 @@ import prisma from '@/lib/db';
 
 export type TokenType = 'email_verification' | 'password_reset';
 
+// Tokens are stored HASHED so a database leak can't be used to verify emails or
+// reset passwords. The raw token only ever lives in the emailed link.
+function storedValue(type: TokenType, rawToken: string): string {
+  const hash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  return `${type}:${hash}`;
+}
+
 export async function generateToken(identifier: string, type: TokenType): Promise<string> {
   // Clean up expired tokens first
   await prisma.verificationToken.deleteMany({
@@ -21,13 +28,11 @@ export async function generateToken(identifier: string, type: TokenType): Promis
   const expiresIn = type === 'email_verification' ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000; // 24h for verification, 1h for reset
   const expires = new Date(Date.now() + expiresIn);
 
-  // Store token with type prefix to avoid conflicts
-  const tokenWithType = `${type}:${token}`;
-  
+  // Store the hashed token (type-prefixed to avoid cross-type conflicts).
   await prisma.verificationToken.create({
     data: {
       identifier,
-      token: tokenWithType,
+      token: storedValue(type, token),
       expires,
     },
   });
@@ -36,8 +41,8 @@ export async function generateToken(identifier: string, type: TokenType): Promis
 }
 
 export async function verifyToken(token: string, identifier: string, type: TokenType): Promise<boolean> {
-  const tokenWithType = `${type}:${token}`;
-  
+  const tokenWithType = storedValue(type, token);
+
   const verificationToken = await prisma.verificationToken.findUnique({
     where: {
       identifier_token: {
@@ -69,8 +74,8 @@ export async function verifyToken(token: string, identifier: string, type: Token
 }
 
 export async function consumeToken(token: string, identifier: string, type: TokenType): Promise<boolean> {
-  const tokenWithType = `${type}:${token}`;
-  
+  const tokenWithType = storedValue(type, token);
+
   try {
     await prisma.verificationToken.delete({
       where: {

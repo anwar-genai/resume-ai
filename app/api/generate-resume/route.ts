@@ -3,6 +3,7 @@ import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import OpenAI from "openai";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
+import { devDetail } from "@/lib/http";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       }
     });
   } catch (error: any) {
-    return NextResponse.json({ error: "Generation failed", detail: error?.message ?? "" }, { status: 500 });
+    return NextResponse.json({ error: "Generation failed", ...devDetail(error) }, { status: 500 });
   }
 }
 

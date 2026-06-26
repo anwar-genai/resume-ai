@@ -91,23 +91,30 @@ Env vars: `POLAR_SERVER`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID_PRO`,
 
 ## Status & roadmap
 
-**Current baseline (branch `feat/multi-plan-tiers`):** Three plans (Free / Pro $5 /
-Power $12), weekly allowances per document type, proposals split into their own quota,
-a `/pricing` page, and `?plan=`-aware checkout. Recurring subscription lifecycle (activate
-→ cancel keeps plan to period end → revoke downgrades to Free) verified earlier against a
-recurring Pro product. The cancel banner bug (status flipping back to active on
-`subscription.updated`) is fixed.
+**Current baseline (`main`):** Three plans (Free / Pro $5 / Power $12), weekly allowances
+per document type, proposals split into their own quota, a `/pricing` page, and
+`?plan=`-aware checkout. Recurring subscription lifecycle verified in sandbox. Security
+work done: rate limiting (Upstash) on login/register/forgot, host-header fix on reset
+links, email-enumeration timing fix, security headers + CSP, SSRF removed (job-link fetch
+gone — cover/proposal use pasted text), and polished register/login UX (auto sign-in).
 
-**To finish this branch:** in Polar (sandbox), create the **Power** recurring product and
-set `POLAR_PRODUCT_ID_POWER` (and `POLAR_PRODUCT_ID_PRO` for Pro); add `planId` to each
-product's metadata is optional — plan is resolved by product id. Verify upgrade to each
-tier + plan switch in the customer portal. Optionally add checkout description/image in
-the Polar dashboard (no code).
+### Security & privacy phases
+- **Phase 1 — auth hardening (DONE):** 8-char password minimum + HaveIBeenPwned breach
+  check (`lib/password.ts`), reset tokens hashed at rest (`lib/tokens.ts`), error details
+  stripped from prod responses (`lib/http.ts` `devDetail`), upload size cap + PDF
+  magic-byte check.
+- **Phase 2 — input validation:** zod schemas + length caps on generation/POST bodies
+  (bounds OpenAI cost).
+- **Phase 3 — privacy/data rights:** account deletion (cascade + Polar revoke), data
+  export (JSON), privacy policy page disclosing processors.
+- **Phase 4 — email verification gating:** require a verified email before generation;
+  reuse the existing verify-email / send-verification flow.
+- **Phase 5 — Google OAuth:** add the provider + account linking.
 
-**Then:**
-- Phase 2 — conversion: turn the 429 "limit reached" responses into a friendly in-app
-  upgrade prompt linking to `/pricing`.
-- Phase 3 — launch: fix pre-existing build-blocking TS errors (`app/api/upload-resume`,
+### Product/launch phases
+- Conversion: turn the 429 "limit reached" responses into a friendly in-app upgrade prompt
+  linking to `/pricing`.
+- Launch: fix pre-existing build-blocking TS errors (`app/api/upload-resume`,
   `app/components/Particles.tsx`, `app/api/preview`); deploy (Vercel + managed Postgres
   e.g. Neon/Supabase); complete Polar production KYC + payout (Payoneer/Wise — operator is
   in Pakistan, so no Stripe); switch `POLAR_SERVER=production` with prod token/webhook.

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { polar } from "@/lib/polar";
+import { devDetail } from "@/lib/http";
 
 // GET /api/portal
 // Creates a Polar customer-portal session for the signed-in user and redirects
@@ -22,7 +23,7 @@ export async function GET() {
   } catch (error: any) {
     console.error("Polar portal error:", error);
     return NextResponse.json(
-      { error: "Failed to open customer portal", detail: error?.message ?? "" },
+      { error: "Failed to open customer portal", ...devDetail(error) },
       { status: 500 }
     );
   }

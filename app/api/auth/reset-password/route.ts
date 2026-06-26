@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
 import { verifyToken, consumeToken } from "@/lib/tokens";
+import { validatePassword } from "@/lib/password";
 
 export async function POST(request: Request) {
   try {
@@ -13,10 +14,9 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ 
-        error: "Password must be at least 6 characters" 
-      }, { status: 400 });
+    const pw = await validatePassword(password);
+    if (!pw.ok) {
+      return NextResponse.json({ error: pw.error }, { status: 400 });
     }
 
     // Verify the token
