@@ -5,7 +5,7 @@ import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
 import { generateProposalSchema, validateBody } from "@/lib/validation";
 import { isEmailVerified } from "@/lib/verification";
-import { openai, MODEL_NAME, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
+import { streamChat, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
 
 export async function POST(request: Request) {
   const session = await getAuthSession();
@@ -69,29 +69,21 @@ export async function POST(request: Request) {
 
     const prompt = `${salutation}\n\nWrite a concise, persuasive Upwork proposal (180–230 words) for: "${projectTitle}" at ${recipientLabel}.\nStyle: first person, friendly-professional, outcome-driven. No headings, no bold, no emojis. Avoid markdown entirely.\n\nInclude, in this order:\n1) 1–2 sentence hook tailored to the project and recipient (individual vs company tone).\n2) A 2–3 step approach with realistic sequence and short timeline.\n3) 1–2 proof points with concrete results (numbers if available) drawn from the resume.\n4) An explicit rate line using the given budget if present (e.g., "My rate: ${budget || '[set rate]'}; for this scope I’d propose …") and a short availability note.\n5) Clear CTA (15‑minute call or a tiny paid kickoff milestone).\n\nIf the title is long or has multiple variants, choose the single most relevant focus based on the resume and details. Keep sentences tight; avoid generic buzzwords.\n\n${budgetLine ? budgetLine + '\n' : ''}${detailsBlock}${asData("RESUME", resumeText)}`;
 
-    const completion = await openai.chat.completions.create({
-      model: MODEL_NAME,
-      messages: [
-        { role: "system", content: `You write concise, high-conversion Upwork proposals. ${ANTI_INJECTION_RULE}` },
-        { role: "user", content: prompt },
-      ],
+    // Stream the proposal to the client; persist + count usage on finish.
+    return await streamChat({
+      system: `You write concise, high-conversion Upwork proposals. ${ANTI_INJECTION_RULE}`,
+      user: prompt,
       temperature: 0.4,
+      onComplete: async (content) => {
+        if (!content) return;
+        const data: any = { userId, projectTitle, clientName: clientName || null, content };
+        if (projectDetails) data.projectDetails = projectDetails;
+        if (budget) data.budget = budget;
+        if (resumeId) data.resumeId = resumeId;
+        await prisma.proposal.create({ data });
+        await incrementUsage(userId, 'proposal');
+      },
     });
-
-    const content = completion.choices?.[0]?.message?.content?.trim();
-    if (!content) {
-      return NextResponse.json({ error: "No content generated" }, { status: 502 });
-    }
-
-    const data: any = { userId, projectTitle, clientName: clientName || null, content };
-    if (projectDetails) data.projectDetails = projectDetails;
-    if (budget) data.budget = budget;
-    if (resumeId) data.resumeId = resumeId;
-
-    const saved = await prisma.proposal.create({ data });
-
-    await incrementUsage(userId, 'proposal');
-    return NextResponse.json({ id: saved.id, content, usage: { remaining: usageCheck.remaining - 1, periodEnd: usageCheck.periodEnd } });
   } catch (error: any) {
     return NextResponse.json({ error: "Generation failed", ...devDetail(error) }, { status: 500 });
   }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 import { Input, Textarea } from "@/app/components/ui/Input";
+import { streamPost } from "@/lib/streamClient";
 
 export default function UpworkProposalPage() {
   const [projectTitle, setProjectTitle] = useState("");
@@ -33,29 +34,22 @@ export default function UpworkProposalPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setResult(null);
+    setResult("");
     try {
-      const res = await fetch("/api/generate-proposal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await streamPost(
+        "/api/generate-proposal",
+        {
           projectTitle,
           clientName: clientName || undefined,
           projectDetails: projectDetails || undefined,
           budget: budget || undefined,
           resumeId: resumeId || undefined,
           resumeText: resumeText || undefined,
-        }),
-      });
-      const contentType = res.headers.get("content-type") || "";
-      if (!res.ok) {
-        const errBody = contentType.includes("application/json") ? await res.json() : await res.text();
-        const errMsg = typeof errBody === "string" ? errBody : errBody?.error;
-        throw new Error(errMsg || "Failed");
-      }
-      const data = contentType.includes("application/json") ? await res.json() : { content: await res.text() };
-      setResult(data.content);
+        },
+        (text) => setResult(text)
+      );
     } catch (err) {
+      setResult(null);
       alert((err as Error).message);
     } finally {
       setLoading(false);

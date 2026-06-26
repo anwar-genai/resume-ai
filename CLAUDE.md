@@ -44,12 +44,15 @@ Required: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`, `NEXTAUTH_SECRE
 - `lib/plans.ts` — single source of truth for tiers & limits (plan-driven, read by
   `user.plan`; not stored per-user). Free: 3/week each. Pro ($5): 25/week each + 10/day.
   Power ($12): 100/week each + 25/day. `PERIOD_DAYS = 7`.
-- Generation routes (`app/api/generate-{resume,cover,proposal}`) check usage, call OpenAI,
-  save via Prisma, then `incrementUsage`.
-- `lib/llm.ts` — shared OpenAI client + `MODEL_NAME`, plus the prompt-injection defense:
-  `ANTI_INJECTION_RULE` (appended to every system prompt) and `asData(label, content)`
-  (wraps untrusted resume/JD text in delimiters). All four LLM routes use it. The
-  ats-score route uses strict `json_schema` structured output.
+- Generation routes (`app/api/generate-{resume,cover,proposal}`) run pre-checks (auth,
+  email-verified, usage, validation), then **stream** the result to the client; the doc is
+  saved + usage incremented in `streamChat`'s `onComplete` when the stream finishes.
+- `lib/llm.ts` — shared OpenAI client + `MODEL_NAME`; the prompt-injection defense
+  (`ANTI_INJECTION_RULE` appended to every system prompt, `asData(label, content)` wrapping
+  untrusted text); and `streamChat()` (streams text/plain, runs `onComplete(fullText)` on
+  finish). The ats-score route uses strict `json_schema` structured output (not streamed).
+- `lib/streamClient.ts` — client helper `streamPost(url, body, onChunk)` the generate
+  pages use to render tokens as they arrive.
 - `app/pricing/page.tsx` — public 3-tier pricing page; paid CTAs hit `/api/checkout?plan=`.
 - `app/api/ats-score` — scores a resume vs a job description (OpenAI JSON mode → score +
   matched/missing keywords + suggestions). Auth + verified-email gated; per-user daily cap

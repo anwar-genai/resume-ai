@@ -5,7 +5,7 @@ import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
 import { generateResumeSchema, validateBody } from "@/lib/validation";
 import { isEmailVerified } from "@/lib/verification";
-import { openai, MODEL_NAME, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
+import { streamChat, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
 
 export async function POST(request: Request) {
   const session = await getAuthSession();
@@ -68,34 +68,18 @@ export async function POST(request: Request) {
       : "";
     const prompt = `You are an expert ATS resume optimizer. Improve the following resume for ATS scanning, clarity, impact, and specificity. Only include keywords the candidate's experience truly supports. Keep original chronology, avoid fabrications, and return only improved resume text.\n\n${context}${asData("RESUME", resume)}`;
 
-    const completion = await openai.chat.completions.create({
-      model: MODEL_NAME,
-      messages: [
-        { role: "system", content: `You optimize resumes for ATS and clarity. ${ANTI_INJECTION_RULE}` },
-        { role: "user", content: prompt },
-      ],
+    // Stream the optimized resume to the client; persist + count usage on finish.
+    return await streamChat({
+      system: `You optimize resumes for ATS and clarity. ${ANTI_INJECTION_RULE}`,
+      user: prompt,
       temperature: 0.4,
-    });
-
-    const optimized = completion.choices?.[0]?.message?.content?.trim();
-    if (!optimized) {
-      return NextResponse.json({ error: "No content generated" }, { status: 502 });
-    }
-
-    const saved = await prisma.resume.create({
-      data: { userId, title: title?.slice(0, 120) ?? null, content: resume, optimizedContent: optimized },
-    });
-
-    // Increment usage count after successful generation
-    await incrementUsage(userId, 'resume');
-
-    return NextResponse.json({ 
-      id: saved.id, 
-      optimized: optimized,
-      usage: {
-        remaining: usageCheck.remaining - 1,
-        periodEnd: usageCheck.periodEnd
-      }
+      onComplete: async (optimized) => {
+        if (!optimized) return;
+        await prisma.resume.create({
+          data: { userId, title: title?.slice(0, 120) ?? null, content: resume, optimizedContent: optimized },
+        });
+        await incrementUsage(userId, 'resume');
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ error: "Generation failed", ...devDetail(error) }, { status: 500 });

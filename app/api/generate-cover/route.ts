@@ -5,7 +5,7 @@ import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
 import { generateCoverSchema, validateBody } from "@/lib/validation";
 import { isEmailVerified } from "@/lib/verification";
-import { openai, MODEL_NAME, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
+import { streamChat, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
 
 export async function POST(request: Request) {
   const session = await getAuthSession();
@@ -96,35 +96,19 @@ export async function POST(request: Request) {
     const jd = jobDescription ? `Here is the job description to target:\n\n${asData("JOB DESCRIPTION", jobDescription)}\n\n` : "";
     const prompt = `${salutation}\n\nWrite a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${companyLabel}. Use the candidate's resume below.\n- Use a tone appropriate to the recipient (more conversational for an individual client; more formal for a company).\n- If the job title is long or contains multiple variants, select the most relevant focus based on the resume and the description.\n- Emphasize concrete, verifiable achievements; avoid cliches.\n- If the company is unknown or an individual client, avoid corporate jargon (e.g., use \"your project\" / \"your team\").\n- End with a clear next step (quick call, proposed timeline, or deliverable).\n\n${jd}${asData("RESUME", resumeText)}`;
 
-    const completion = await openai.chat.completions.create({
-      model: MODEL_NAME,
-      messages: [
-        { role: "system", content: `You are a professional cover letter writer. ${ANTI_INJECTION_RULE}` },
-        { role: "user", content: prompt },
-      ],
+    // Stream the cover letter to the client; persist + count usage on finish.
+    return await streamChat({
+      system: `You are a professional cover letter writer. ${ANTI_INJECTION_RULE}`,
+      user: prompt,
       temperature: 0.5,
-    });
-
-    const letter = completion.choices?.[0]?.message?.content?.trim();
-    if (!letter) {
-      return NextResponse.json({ error: "No content generated" }, { status: 502 });
-    }
-
-    const data: any = { userId, jobTitle, company: companyToPersist, content: letter };
-    if (resumeIdToAttach) data.resumeId = resumeIdToAttach;
-    if (jobDescription) data.jobDescription = jobDescription;
-    const saved = await prisma.coverLetter.create({ data });
-
-    // Increment usage count after successful generation
-    await incrementUsage(userId, 'cover');
-
-    return NextResponse.json({ 
-      id: saved.id, 
-      content: letter,
-      usage: {
-        remaining: usageCheck.remaining - 1,
-        periodEnd: usageCheck.periodEnd
-      }
+      onComplete: async (letter) => {
+        if (!letter) return;
+        const data: any = { userId, jobTitle, company: companyToPersist, content: letter };
+        if (resumeIdToAttach) data.resumeId = resumeIdToAttach;
+        if (jobDescription) data.jobDescription = jobDescription;
+        await prisma.coverLetter.create({ data });
+        await incrementUsage(userId, 'cover');
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ error: "Generation failed", ...devDetail(error) }, { status: 500 });
