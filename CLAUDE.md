@@ -101,12 +101,37 @@ Env vars: `POLAR_SERVER`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID_PRO`,
 
 ## Status & roadmap
 
-**Current baseline (`main`):** Three plans (Free / Pro $5 / Power $12), weekly allowances
-per document type, proposals split into their own quota, a `/pricing` page, and
-`?plan=`-aware checkout. Recurring subscription lifecycle verified in sandbox. Security
-work done: rate limiting (Upstash) on login/register/forgot, host-header fix on reset
-links, email-enumeration timing fix, security headers + CSP, SSRF removed (job-link fetch
-gone — cover/proposal use pasted text), and polished register/login UX (auto sign-in).
+### ▶ Next session — start here
+1. **Test + merge `feat/streaming`** (NOT yet merged to `main`). Run the manual checklist:
+   register/login, generate resume/cover/proposal (should **stream** token-by-token), ATS
+   score, usage limits, settings export/delete. For local testing set
+   `REQUIRE_EMAIL_VERIFICATION=false` and ensure `OPENAI_API_KEY` is set. ngrok is only
+   needed for the Polar upgrade webhook, nothing else. If good → `git checkout main &&
+   git merge --ff-only feat/streaming && git push`.
+2. **Then pick the next item** (recommended order below):
+   - **Product P1 — fix export quality** (HIGH): `lib/pdf-generator.ts` hand-builds a PDF
+     that **truncates lines at 80 chars** (data loss) and the "DOCX" is HTML. Replace with
+     real templated PDF (`@react-pdf/renderer` or HTML→PDF) + the real `docx` lib. Biggest
+     visible quality + credibility win, and fixes a bug.
+   - **Product P2 — before/after diff** view for resume optimization.
+   - **AI-3 — observability**: log model/tokens/latency/cost per call + Sentry.
+   - **Product P3/P4** — structured resume editor (sections) → templates/editing; iteration
+     controls (tone/length/regenerate).
+   - **Security Phase 5 — Google OAuth** (best done after domain/deploy).
+3. **Deployment is intentionally paused** — polishing the product first. Runbook ready in
+   [DEPLOY.md](DEPLOY.md); target `resume.beyondlex.ai` (Vercel + Neon; Resend+Zoho already
+   on beyondlex.ai). Phase 5 OAuth + final email-gate test fit best once deployed.
+
+Minor cleanup noticed: `app/resume/page.tsx` still has stale "monthly usage" copy — should
+say weekly.
+
+**Current baseline (`main` @ commit before streaming):** Three plans (Free / Pro $5 /
+Power $12), weekly per-document allowances, `/pricing` + `?plan=` checkout, recurring
+subscription verified in sandbox. **AI features:** ATS match score (`/api/ats-score`,
+strict structured output), prompt-injection defense + shared `lib/llm.ts`. **Security:**
+rate limiting, host-header fix, enum-timing fix, headers+CSP, SSRF removed, 8-char+HIBP
+passwords, hashed tokens, input validation, privacy/data-rights, email-verification gate.
+**On `feat/streaming` (unmerged):** end-to-end streaming of resume/cover/proposal generation.
 
 ### Security & privacy phases
 - **Phase 1 — auth hardening (DONE):** 8-char password minimum + HaveIBeenPwned breach
