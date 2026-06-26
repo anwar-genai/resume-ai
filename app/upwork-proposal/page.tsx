@@ -9,7 +9,6 @@ export default function UpworkProposalPage() {
   const [projectTitle, setProjectTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [projectDetails, setProjectDetails] = useState("");
-  const [jobLink, setJobLink] = useState("");
   const [budget, setBudget] = useState("");
   const [resumeId, setResumeId] = useState<string>("");
   const [resumes, setResumes] = useState<Array<{ id: string; title: string | null; createdAt: string }>>([]);
@@ -44,7 +43,6 @@ export default function UpworkProposalPage() {
           clientName: clientName || undefined,
           projectDetails: projectDetails || undefined,
           budget: budget || undefined,
-          jobLink: jobLink || undefined,
           resumeId: resumeId || undefined,
           resumeText: resumeText || undefined,
         }),
@@ -172,29 +170,7 @@ export default function UpworkProposalPage() {
               </p>
             </div>
           </div>
-          
-          {/* Project Link Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-lg font-semibold text-gray-900 dark:text-white">
-                Project Link
-              </label>
-              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded">Optional</span>
-            </div>
-            <div className="space-y-2">
-              <input
-                type="url"
-                value={jobLink}
-                onChange={(e) => setJobLink(e.target.value)}
-                placeholder="https://upwork.com/jobs/project-link"
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Link to the Upwork project posting for better context
-              </p>
-            </div>
-          </div>
-          
+
           {/* Resume Selection Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
