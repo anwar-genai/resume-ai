@@ -46,6 +46,10 @@ Required: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`, `NEXTAUTH_SECRE
   Power ($12): 100/week each + 25/day. `PERIOD_DAYS = 7`.
 - Generation routes (`app/api/generate-{resume,cover,proposal}`) check usage, call OpenAI,
   save via Prisma, then `incrementUsage`.
+- `lib/llm.ts` — shared OpenAI client + `MODEL_NAME`, plus the prompt-injection defense:
+  `ANTI_INJECTION_RULE` (appended to every system prompt) and `asData(label, content)`
+  (wraps untrusted resume/JD text in delimiters). All four LLM routes use it. The
+  ats-score route uses strict `json_schema` structured output.
 - `app/pricing/page.tsx` — public 3-tier pricing page; paid CTAs hit `/api/checkout?plan=`.
 - `app/api/ats-score` — scores a resume vs a job description (OpenAI JSON mode → score +
   matched/missing keywords + suggestions). Auth + verified-email gated; per-user daily cap

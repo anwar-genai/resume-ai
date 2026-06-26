@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
-import OpenAI from "openai";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
 import { generateResumeSchema, validateBody } from "@/lib/validation";
 import { isEmailVerified } from "@/lib/verification";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
+import { openai, MODEL_NAME, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
 
 export async function POST(request: Request) {
   const session = await getAuthSession();
@@ -66,13 +63,15 @@ export async function POST(request: Request) {
     }
     const { resume, jobDescription, title } = parsed.data;
 
-    const context = jobDescription ? `Match the improvements to the following job description. Prioritize relevant keywords and responsibilities that are genuinely supported by the resume.\n\nJOB DESCRIPTION:\n${jobDescription}\n\n` : "";
-    const prompt = `You are an expert ATS resume optimizer. Improve the following resume for ATS scanning, clarity, impact, and specificity. Only include keywords the candidate's experience truly supports. Keep original chronology, avoid fabrications, and return only improved resume text.\n\n${context}RESUME:\n${resume}`;
+    const context = jobDescription
+      ? `Match the improvements to the following job description. Prioritize relevant keywords and responsibilities that are genuinely supported by the resume.\n\n${asData("JOB DESCRIPTION", jobDescription)}\n\n`
+      : "";
+    const prompt = `You are an expert ATS resume optimizer. Improve the following resume for ATS scanning, clarity, impact, and specificity. Only include keywords the candidate's experience truly supports. Keep original chronology, avoid fabrications, and return only improved resume text.\n\n${context}${asData("RESUME", resume)}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
       messages: [
-        { role: "system", content: "You optimize resumes for ATS and clarity." },
+        { role: "system", content: `You optimize resumes for ATS and clarity. ${ANTI_INJECTION_RULE}` },
         { role: "user", content: prompt },
       ],
       temperature: 0.4,

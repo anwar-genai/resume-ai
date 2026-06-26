@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
-import OpenAI from "openai";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
 import { generateCoverSchema, validateBody } from "@/lib/validation";
 import { isEmailVerified } from "@/lib/verification";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
+import { openai, MODEL_NAME, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
 
 export async function POST(request: Request) {
   const session = await getAuthSession();
@@ -96,13 +93,13 @@ export async function POST(request: Request) {
       ? `Dear ${clientName.trim()},`
       : (hasCompany ? `Dear Hiring Manager at ${company.trim()},` : `Dear Hiring Manager,`);
 
-    const jd = jobDescription ? `Here is the job description to target: \n\n${jobDescription}\n\n` : "";
-    const prompt = `${salutation}\n\nWrite a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${companyLabel}. Use the candidate's resume below.\n- Use a tone appropriate to the recipient (more conversational for an individual client; more formal for a company).\n- If the job title is long or contains multiple variants, select the most relevant focus based on the resume and the description.\n- Emphasize concrete, verifiable achievements; avoid cliches.\n- If the company is unknown or an individual client, avoid corporate jargon (e.g., use \"your project\" / \"your team\").\n- End with a clear next step (quick call, proposed timeline, or deliverable).\n\n${jd}RESUME:\n${resumeText}`;
+    const jd = jobDescription ? `Here is the job description to target:\n\n${asData("JOB DESCRIPTION", jobDescription)}\n\n` : "";
+    const prompt = `${salutation}\n\nWrite a concise, tailored cover letter (max ~350 words) for the role of ${jobTitle} at ${companyLabel}. Use the candidate's resume below.\n- Use a tone appropriate to the recipient (more conversational for an individual client; more formal for a company).\n- If the job title is long or contains multiple variants, select the most relevant focus based on the resume and the description.\n- Emphasize concrete, verifiable achievements; avoid cliches.\n- If the company is unknown or an individual client, avoid corporate jargon (e.g., use \"your project\" / \"your team\").\n- End with a clear next step (quick call, proposed timeline, or deliverable).\n\n${jd}${asData("RESUME", resumeText)}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
       messages: [
-        { role: "system", content: "You are a professional cover letter writer." },
+        { role: "system", content: `You are a professional cover letter writer. ${ANTI_INJECTION_RULE}` },
         { role: "user", content: prompt },
       ],
       temperature: 0.5,

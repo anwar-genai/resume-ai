@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import OpenAI from "openai";
 import { z } from "zod";
 import { atsScoreSchema, validateBody } from "@/lib/validation";
 import { isEmailVerified } from "@/lib/verification";
 import { atsLimiter, checkRateLimit } from "@/lib/ratelimit";
 import { devDetail } from "@/lib/http";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
+import { openai, MODEL_NAME, ANTI_INJECTION_RULE, asData } from "@/lib/llm";
 
 // Lenient parse of the model's JSON — each field falls back instead of throwing.
 const atsResultSchema = z.object({
@@ -18,6 +15,24 @@ const atsResultSchema = z.object({
   missingKeywords: z.array(z.string()).catch([]),
   suggestions: z.array(z.string()).catch([]),
 });
+
+// Strict structured-output schema — the model is forced to return exactly this.
+const ATS_JSON_SCHEMA = {
+  name: "ats_analysis",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      score: { type: "integer", description: "Overall match, 0-100" },
+      summary: { type: "string", description: "1-2 sentence assessment of fit" },
+      matchedKeywords: { type: "array", items: { type: "string" } },
+      missingKeywords: { type: "array", items: { type: "string" } },
+      suggestions: { type: "array", items: { type: "string" } },
+    },
+    required: ["score", "summary", "matchedKeywords", "missingKeywords", "suggestions"],
+  },
+} as const;
 
 export async function POST(request: Request) {
   const session = await getAuthSession();
@@ -52,30 +67,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "OpenAI API key missing" }, { status: 500 });
     }
 
-    const prompt = `Compare the RESUME to the JOB DESCRIPTION as an ATS/recruiter would and return STRICT JSON with this exact shape:
-{
-  "score": <integer 0-100, overall match>,
-  "summary": "<1-2 sentence assessment of fit>",
-  "matchedKeywords": ["<important skills/keywords from the job that ARE in the resume>"],
-  "missingKeywords": ["<important skills/keywords from the job that are MISSING from the resume>"],
-  "suggestions": ["<3-6 specific, actionable improvements; suggest only changes the candidate's real experience can support — never invent experience>"]
-}
-Rules: up to 12 items per keyword array. Keywords should be concise (skills, tools, titles). Do not include any text outside the JSON.
+    const prompt = `Compare the resume to the job description as an ATS/recruiter would.
+- score: overall match 0-100.
+- matchedKeywords: important skills/keywords from the job that ARE in the resume.
+- missingKeywords: important skills/keywords from the job that are MISSING from the resume.
+- suggestions: 3-6 specific, actionable improvements; suggest only changes the candidate's real experience can support — never invent experience.
+Up to 12 items per keyword array; keep keywords concise (skills, tools, titles).
 
-JOB DESCRIPTION:
-${jobDescription}
+${asData("JOB DESCRIPTION", jobDescription)}
 
-RESUME:
-${resumeText}`;
+${asData("RESUME", resumeText)}`;
 
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
       messages: [
-        { role: "system", content: "You are an ATS and technical recruiting expert. You return only valid JSON." },
+        {
+          role: "system",
+          content: `You are an ATS and technical recruiting expert. ${ANTI_INJECTION_RULE}`,
+        },
         { role: "user", content: prompt },
       ],
       temperature: 0.2,
-      response_format: { type: "json_object" },
+      response_format: { type: "json_schema", json_schema: ATS_JSON_SCHEMA },
     });
 
     const raw = completion.choices?.[0]?.message?.content?.trim();
