@@ -1,5 +1,6 @@
 "use client";
-import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef } from "react";
+import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -21,17 +22,36 @@ const baseClasses = `
 `;
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = "", ...props }, ref) => (
-    <div className="space-y-1">
-      {label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>}
-      <input
-        ref={ref}
-        className={`${baseClasses} ${error ? "border-red-500/50 ring-red-500/20" : ""} ${className}`}
-        {...props}
-      />
-      {error && <p className="text-sm text-red-500">{error}</p>}
-    </div>
-  )
+  ({ label, error, className = "", type, ...props }, ref) => {
+    const [reveal, setReveal] = useState(false);
+    const isPassword = type === "password";
+    const effectiveType = isPassword && reveal ? "text" : type;
+
+    return (
+      <div className="space-y-1">
+        {label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>}
+        <div className="relative">
+          <input
+            ref={ref}
+            type={effectiveType}
+            className={`${baseClasses} ${isPassword ? "pr-12" : ""} ${error ? "border-red-500/50 ring-red-500/20" : ""} ${className}`}
+            {...props}
+          />
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setReveal((v) => !v)}
+              aria-label={reveal ? "Hide password" : "Show password"}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+            >
+              {reveal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          )}
+        </div>
+        {error && <p className="text-sm text-red-500">{error}</p>}
+      </div>
+    );
+  }
 );
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
