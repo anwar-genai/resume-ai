@@ -103,8 +103,9 @@ gone — cover/proposal use pasted text), and polished register/login UX (auto s
   check (`lib/password.ts`), reset tokens hashed at rest (`lib/tokens.ts`), error details
   stripped from prod responses (`lib/http.ts` `devDetail`), upload size cap + PDF
   magic-byte check.
-- **Phase 2 — input validation:** zod schemas + length caps on generation/POST bodies
-  (bounds OpenAI cost).
+- **Phase 2 — input validation (DONE):** zod schemas + length caps on the generation
+  routes (`lib/validation.ts`); bounds the text forwarded to OpenAI. `zod` is now a
+  direct dependency.
 - **Phase 3 — privacy/data rights:** account deletion (cascade + Polar revoke), data
   export (JSON), privacy policy page disclosing processors.
 - **Phase 4 — email verification gating:** require a verified email before generation;

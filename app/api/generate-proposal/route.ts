@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import OpenAI from "openai";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
+import { generateProposalSchema, validateBody } from "@/lib/validation";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -35,19 +36,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "OpenAI API key missing" }, { status: 500 });
     }
 
-    const body = await request.json();
-    const { projectTitle, clientName, projectDetails, budget, resumeId, resumeText: providedResumeText } = body as {
-      projectTitle: string;
-      clientName?: string;
-      projectDetails?: string;
-      budget?: string;
-      resumeId?: string;
-      resumeText?: string;
-    };
-
-    if (!projectTitle) {
-      return NextResponse.json({ error: "Missing projectTitle" }, { status: 400 });
+    const parsed = validateBody(generateProposalSchema, await request.json().catch(() => null));
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { projectTitle, clientName, projectDetails, budget, resumeId, resumeText: providedResumeText } = parsed.data;
 
     // Resolve resume text: provided -> from resumeId -> latest resume
     let resumeText: string | null = null;

@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import OpenAI from "openai";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
+import { generateCoverSchema, validateBody } from "@/lib/validation";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -51,10 +52,11 @@ export async function POST(request: Request) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ error: "OpenAI API key missing" }, { status: 500 });
     }
-    const { jobTitle, company, clientName, jobDescription, resumeId, resumeText: providedResumeText } = await request.json();
-    if (!jobTitle) {
-      return NextResponse.json({ error: "Missing jobTitle" }, { status: 400 });
+    const parsed = validateBody(generateCoverSchema, await request.json().catch(() => null));
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { jobTitle, company, clientName, jobDescription, resumeId, resumeText: providedResumeText } = parsed.data;
 
     // Determine resume text priority: provided text > selected resume > latest resume
     let resumeText: string | null = null;
