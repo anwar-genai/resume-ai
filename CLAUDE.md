@@ -122,10 +122,12 @@ gone — cover/proposal use pasted text), and polished register/login UX (auto s
 ### Product/launch phases
 - Conversion: turn the 429 "limit reached" responses into a friendly in-app upgrade prompt
   linking to `/pricing`.
-- Launch: deploy (Vercel + managed Postgres e.g. Neon/Supabase); complete Polar production
-  KYC + payout (Payoneer/Wise — operator is in Pakistan, so no Stripe); switch
-  `POLAR_SERVER=production` with prod token/webhook. (The previously build-blocking TS
-  errors in `upload-resume`, `Particles.tsx`, and `preview` are now fixed — `tsc` is clean.)
+- Launch: deploy (Vercel + **Neon** Postgres); domain **numlian.com** (keep `ustbian.com`
+  for the separate uni app); email = Resend (send via `send.numlian.com`) + Zoho (receive
+  `support@numlian.com`); complete Polar production KYC + payout (Payoneer/Wise — operator
+  is in Pakistan, so no Stripe); switch `POLAR_SERVER=production` with prod token/webhook.
+  Full step-by-step runbook in **[DEPLOY.md](DEPLOY.md)**. (The previously build-blocking
+  TS errors are fixed — `tsc` is clean.)
 
 ## Constraints
 - Operator is in **Pakistan** → Stripe unavailable. Billing/payouts go through **Polar**
