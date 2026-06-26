@@ -24,7 +24,15 @@ function make(limiter: ReturnType<typeof Ratelimit.slidingWindow>): Ratelimit | 
 }
 
 // Tunable windows. Sliding window = "N requests per duration", per key.
+//
+// Login uses two layers:
+//  - loginLimiter: the user-facing limit, enforced by the /api/auth/login-precheck
+//    endpoint the login page calls before submitting (so we can show a clear
+//    "too many attempts" message NextAuth would otherwise mask).
+//  - loginBackstopLimiter: a generous cap inside authorize() that only matters if
+//    someone skips the UI and POSTs the NextAuth callback directly.
 export const loginLimiter = make(Ratelimit.slidingWindow(8, "1 m"));
+export const loginBackstopLimiter = make(Ratelimit.slidingWindow(20, "1 m"));
 export const registerLimiter = make(Ratelimit.slidingWindow(5, "1 h"));
 export const forgotPasswordLimiter = make(Ratelimit.slidingWindow(4, "1 h"));
 

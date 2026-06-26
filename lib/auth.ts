@@ -4,7 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { headers } from "next/headers";
 import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
-import { checkRateLimit, getClientIp, loginLimiter } from "@/lib/ratelimit";
+import { checkRateLimit, getClientIp, loginBackstopLimiter } from "@/lib/ratelimit";
 
 // A throwaway valid bcrypt hash compared against when the email doesn't exist,
 // so login timing doesn't leak whether an account is registered.
@@ -26,16 +26,17 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // Throttle by client IP to stop brute-force / credential stuffing.
-        // Thrown messages surface to the login page via signIn's `res.error`.
-        // Guard the header read so a context hiccup can never block all logins.
+        // Backstop throttle for callers that bypass the UI pre-check and POST
+        // the NextAuth callback directly. The user-facing limit lives in
+        // /api/auth/login-precheck. Guard the header read so a context hiccup
+        // can never block all logins.
         let ip = "unknown";
         try {
           ip = getClientIp(await headers());
         } catch {
           /* fall back to a shared bucket */
         }
-        const rl = await checkRateLimit(loginLimiter, `login:${ip}`);
+        const rl = await checkRateLimit(loginBackstopLimiter, `login-hard:${ip}`);
         if (!rl.success) {
           throw new Error("Too many login attempts. Please wait a minute and try again.");
         }

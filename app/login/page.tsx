@@ -12,11 +12,28 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+
+    // Pre-check the per-IP login rate so we can show a clear message
+    // (NextAuth masks rate-limit errors as a generic "CredentialsSignin").
+    try {
+      const pre = await fetch("/api/auth/login-precheck", { method: "POST" });
+      if (pre.status === 429) {
+        const body = await pre.json().catch(() => ({}));
+        setLoading(false);
+        alert(body.error || "Too many login attempts. Please wait a minute and try again.");
+        return;
+      }
+    } catch {
+      /* if the pre-check is unreachable, fall through to the normal sign-in */
+    }
+
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (res?.error) {
       if (res.error.includes("verify your email")) {
         alert(res.error + " You can request a new verification email if needed.");
+      } else if (res.error === "CredentialsSignin") {
+        alert("Incorrect email or password.");
       } else {
         alert(res.error);
       }
