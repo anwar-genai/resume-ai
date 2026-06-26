@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 
-export default function VerifyEmailPage() {
+function VerifyEmailInner() {
   const [status, setStatus] = useState<"loading" | "success" | "error" | "resend">("loading");
   const [message, setMessage] = useState("");
   const [resending, setResending] = useState(false);
@@ -151,5 +151,13 @@ export default function VerifyEmailPage() {
         )}
       </GlassCard>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailInner />
+    </Suspense>
   );
 }

@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 
-export default function ResetPasswordPage() {
+function ResetPasswordInner() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState<"form" | "loading" | "success" | "error">("form");
@@ -185,5 +185,13 @@ export default function ResetPasswordPage() {
         )}
       </GlassCard>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordInner />
+    </Suspense>
   );
 }
