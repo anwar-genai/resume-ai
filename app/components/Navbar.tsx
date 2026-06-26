@@ -22,8 +22,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+  const [plan, setPlan] = useState<string | null>(null);
+
   const user = session?.user;
+  const isPro = plan === "pro";
   const userInitials = user?.name
     ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
     : user?.email?.[0]?.toUpperCase() || "?";
@@ -45,6 +47,29 @@ export default function Navbar() {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Load the user's plan for the badge + billing menu. Refetch on navigation so
+  // it updates after returning from checkout/portal.
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setPlan(null);
+      return;
+    }
+    let active = true;
+    fetch("/api/user/usage")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (active && d?.plan) setPlan(d.plan);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [status, pathname]);
+
+  const goToBilling = () => {
+    window.location.href = isPro ? "/api/portal" : "/api/checkout";
+  };
 
   return (
     <>
@@ -117,6 +142,22 @@ export default function Navbar() {
 
               {/* Right side */}
               <div className="flex items-center gap-3">
+                {/* Plan pill: PRO badge or Upgrade button */}
+                {status === "authenticated" && plan && (
+                  isPro ? (
+                    <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-indigo-500 to-emerald-500 shadow-sm">
+                      <span className="text-[10px]">★</span> PRO
+                    </span>
+                  ) : (
+                    <Link
+                      href="/api/checkout"
+                      className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-emerald-600 hover:opacity-90 transition-opacity shadow-sm"
+                    >
+                      Upgrade
+                    </Link>
+                  )
+                )}
+
                 {/* Theme Toggle */}
                 <ThemeToggle />
 
@@ -227,9 +268,9 @@ export default function Navbar() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                           </svg>
                         }
-                        onClick={() => {/* Navigate to billing */}}
+                        onClick={goToBilling}
                       >
-                        Billing & Usage
+                        {isPro ? "Manage Subscription" : "Upgrade to Pro"}
                       </DropdownItem>
                       <DropdownItem
                         icon={
@@ -358,15 +399,30 @@ export default function Navbar() {
             
             {/* Mobile Auth Buttons */}
             {status === "authenticated" ? (
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center gap-3 w-full px-4 py-3 text-left text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Sign Out
-              </button>
+              <>
+                <button
+                  onClick={goToBilling}
+                  className={`flex items-center gap-3 w-full px-4 py-3 text-left text-base font-medium rounded-lg transition-colors cursor-pointer ${
+                    isPro
+                      ? "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                      : "text-white bg-gradient-to-r from-indigo-600 to-emerald-600"
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  {isPro ? "Manage Subscription" : "Upgrade to Pro"}
+                </button>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-left text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Sign Out
+                </button>
+              </>
             ) : (
               <div className="pt-4 space-y-2">
                 <Link href="/login" className="block cursor-pointer">

@@ -123,25 +123,10 @@ export default function UsageDisplay() {
         </p>
       )}
 
-      <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+      <div className="mt-3 pt-3 border-t border-gray-200">
         <p className="text-xs text-gray-500">
           Resets in {daysUntilReset} day{daysUntilReset !== 1 ? 's' : ''}
         </p>
-        {isPro ? (
-          <a
-            href="/api/portal"
-            className="text-xs font-semibold text-indigo-700 hover:text-indigo-900 underline underline-offset-2"
-          >
-            Manage Subscription
-          </a>
-        ) : (
-          <a
-            href="/api/checkout"
-            className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-full transition-colors"
-          >
-            Upgrade to Pro
-          </a>
-        )}
       </div>
     </GlassCard>
   );

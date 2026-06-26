@@ -81,9 +81,18 @@ Env vars: `POLAR_SERVER`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID`, `POLAR_WEBHO
 
 ## Status & roadmap
 
-**Done:** Subscription upgrade + cancel/downgrade + customer portal, verified in Polar sandbox.
+**Current baseline (this branch):** Billing integration works end-to-end against a
+**one-time** Polar product ($5) — upgrade-to-Pro verified in sandbox via `order.paid`.
+The code is provider-config-agnostic: it already handles recurring subscriptions too,
+but the sandbox product used so far is one-time, so `subscription.*` events (and the
+portal's Cancel option) don't apply yet. One-time vs recurring is purely a Polar product
+setting + `POLAR_PRODUCT_ID` — **no code change** is needed to switch.
 
-**Next:**
+**Next (separate branch):** create a recurring/monthly $5 Polar product, set its id in
+`POLAR_PRODUCT_ID`, and verify the subscription lifecycle (activate → cancel keeps Pro to
+period end → revoke downgrades to Free) + customer-portal cancel.
+
+**Then:**
 - Phase 2 — conversion: turn the 429 "limit reached" responses into a friendly in-app
   upgrade prompt; add a pricing/landing section.
 - Phase 3 — launch: fix pre-existing build-blocking TS errors (`app/api/upload-resume`,
