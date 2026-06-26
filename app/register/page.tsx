@@ -99,6 +99,13 @@ export default function RegisterPage() {
             Sign in
           </a>
         </p>
+        <p className="text-xs text-gray-500 dark:text-gray-500 mt-3 text-center">
+          By creating an account you agree to our{" "}
+          <a className="underline hover:text-indigo-600" href="/privacy">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </GlassCard>
     </div>
   );

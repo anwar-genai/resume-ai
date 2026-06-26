@@ -106,8 +106,12 @@ gone — cover/proposal use pasted text), and polished register/login UX (auto s
 - **Phase 2 — input validation (DONE):** zod schemas + length caps on the generation
   routes (`lib/validation.ts`); bounds the text forwarded to OpenAI. `zod` is now a
   direct dependency.
-- **Phase 3 — privacy/data rights:** account deletion (cascade + Polar revoke), data
-  export (JSON), privacy policy page disclosing processors.
+- **Phase 3 — privacy/data rights (DONE):** `/settings` page with data export
+  (`GET /api/user/export`, JSON download) and account deletion
+  (`DELETE /api/user/account`, cascade delete + verification-token cleanup; blocked while
+  `subscriptionStatus === "active"` — user must cancel in the portal first). `/privacy`
+  policy page discloses processors (OpenAI/Polar/Resend/Upstash). Navbar "Profile
+  Settings" → `/settings`.
 - **Phase 4 — email verification gating:** require a verified email before generation;
   reuse the existing verify-email / send-verification flow.
 - **Phase 5 — Google OAuth:** add the provider + account linking.

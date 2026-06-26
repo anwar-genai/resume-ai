@@ -94,6 +94,8 @@ npm run dev
 - `/auth/verify-email` — Email verification
 - `/auth/forgot-password`, `/auth/reset-password` — Password reset
 - `/pricing` — Plan comparison (Free / Pro / Power) with upgrade buttons
+- `/settings` — Account settings: export your data, delete your account
+- `/privacy` — Privacy policy
 - `/dashboard` — Saved resumes, cover letters, and proposals
 - `/resume` — Paste or upload, then optimize resume text
 - `/cover-letter` — Generate tailored cover letters
@@ -124,6 +126,8 @@ npm run dev
 - `GET /api/resumes` — List the current user's resumes
 - `GET /api/user/documents` — List the current user's documents
 - `GET /api/user/usage` — Current usage and limits
+- `GET /api/user/export` — Download all of the user's data as JSON
+- `DELETE /api/user/account` — Permanently delete the account + data (blocked while a subscription is active)
 - `GET /api/preview/:type/:id` — Preview a document (resume | cover | proposal)
 - `GET /api/export/resume/:id` — Download resume
 - `GET /api/export/cover/:id` — Download cover letter
