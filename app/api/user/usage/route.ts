@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { checkUsageLimit } from "@/lib/usage";
+import { emailVerificationRequired } from "@/lib/verification";
 import prisma from "@/lib/db";
 
 export async function GET() {
@@ -19,7 +20,7 @@ export async function GET() {
       checkUsageLimit(userId, 'proposal'),
       prisma.user.findUnique({
         where: { id: userId },
-        select: { subscriptionStatus: true, subscriptionEndsAt: true },
+        select: { subscriptionStatus: true, subscriptionEndsAt: true, emailVerified: true, email: true },
       }),
     ]);
 
@@ -39,6 +40,9 @@ export async function GET() {
       proposal: shape(proposalUsage),
       isBlocked: resumeUsage.isBlocked,
       blockReason: resumeUsage.blockReason,
+      email: sub?.email ?? null,
+      emailVerified: Boolean(sub?.emailVerified),
+      verificationRequired: emailVerificationRequired(),
     });
   } catch (error) {
     console.error('Usage check error:', error);

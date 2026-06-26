@@ -6,6 +6,7 @@ import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 import Badge from "@/app/components/ui/Badge";
 import UsageDisplay from "@/app/components/UsageDisplay";
+import VerifyEmailBanner from "@/app/components/VerifyEmailBanner";
 import Skeleton, { SkeletonCard } from "@/app/components/ui/Skeleton";
 const DocumentPreview = dynamic(() => import("@/app/components/DocumentPreview"), { ssr: false });
 import { useState, useEffect, use } from "react";
@@ -123,6 +124,7 @@ export default function DashboardPage({
   return (
     <div className="min-h-[calc(100vh-64px)] p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        <VerifyEmailBanner />
         {/* Header with stats */}
         <header className="grid gap-6 lg:grid-cols-[1fr,auto]">
           <div>

@@ -112,8 +112,11 @@ gone — cover/proposal use pasted text), and polished register/login UX (auto s
   `subscriptionStatus === "active"` — user must cancel in the portal first). `/privacy`
   policy page discloses processors (OpenAI/Polar/Resend/Upstash). Navbar "Profile
   Settings" → `/settings`.
-- **Phase 4 — email verification gating:** require a verified email before generation;
-  reuse the existing verify-email / send-verification flow.
+- **Phase 4 — email verification gating (DONE):** generation routes return 403
+  (`needsVerification`) until the email is verified (`lib/verification.ts`); register now
+  sends the verification email; a dashboard banner offers resend. Gated by
+  `REQUIRE_EMAIL_VERIFICATION` (default on; set `false` for local dev). Login stays open
+  (soft gate) so the post-signup auto-login still works.
 - **Phase 5 — Google OAuth:** add the provider + account linking.
 
 ### Product/launch phases

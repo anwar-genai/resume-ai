@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
 import { checkRateLimit, getClientIp, registerLimiter } from "@/lib/ratelimit";
 import { validatePassword } from "@/lib/password";
-// Email verification disabled by request
+import { sendVerificationEmail } from "@/lib/verification";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -33,21 +33,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
-    // Create user (email verification disabled)
     const hashed = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({ 
-      data: { 
-        email, 
+    const user = await prisma.user.create({
+      data: {
+        email,
         password: hashed,
-        emailVerified: null // Explicitly set as unverified
-      } 
+        emailVerified: null, // unverified until they click the link
+      },
     });
 
-    return NextResponse.json({ 
-      id: user.id, 
-      email: user.email, 
+    // Best-effort: send the verification email. Don't fail registration if the
+    // email provider is down or unconfigured (e.g. local dev).
+    let emailSent = false;
+    try {
+      await sendVerificationEmail(email);
+      emailSent = true;
+    } catch (e) {
+      console.error("Failed to send verification email:", e);
+    }
+
+    return NextResponse.json({
+      id: user.id,
+      email: user.email,
       message: "Account created!",
-      emailSent: false 
+      emailSent,
     });
   } catch (error) {
     console.error('Registration error:', error);

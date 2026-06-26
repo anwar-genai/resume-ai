@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { sendEmail, generateVerificationEmailTemplate } from "@/lib/email";
-import { generateToken, getBaseUrl } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/verification";
 
 export async function POST(request: Request) {
   try {
@@ -25,24 +24,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email already verified" }, { status: 400 });
     }
 
-    // Generate verification token
-    const token = await generateToken(email, 'email_verification');
-    
-    // Create verification URL (prefer request origin)
-    const reqUrl = new URL(request.url);
-    const baseUrl = `${reqUrl.protocol}//${reqUrl.host}` || getBaseUrl();
-    const verificationUrl = `${baseUrl}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    await sendVerificationEmail(email);
 
-    // Send verification email
-    const emailTemplate = generateVerificationEmailTemplate(verificationUrl);
-    await sendEmail({
-      to: email,
-      ...emailTemplate,
-    });
-
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Verification email sent successfully",
-      sent: true 
+      sent: true
     });
 
   } catch (error) {

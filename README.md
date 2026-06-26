@@ -209,6 +209,9 @@ FROM_EMAIL             # e.g. Acme <onboarding@resend.dev>
 # Admin
 ADMIN_EMAILS           # Comma-separated list of admin emails
 
+# Email verification (optional; gate is ON by default)
+# REQUIRE_EMAIL_VERIFICATION=false   # set "false" to disable the verify-to-generate gate
+
 # Billing (Polar) — all from the SAME Polar org/environment
 POLAR_SERVER           # sandbox | production
 POLAR_ACCESS_TOKEN     # Polar organization access token

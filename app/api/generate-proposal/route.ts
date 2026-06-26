@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import { checkUsageLimit, incrementUsage } from "@/lib/usage";
 import { devDetail } from "@/lib/http";
 import { generateProposalSchema, validateBody } from "@/lib/validation";
+import { isEmailVerified } from "@/lib/verification";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_NAME = process.env.OPENAI_MODEL || "gpt-4o-mini";
@@ -16,6 +17,13 @@ export async function POST(request: Request) {
   }
 
   const userId = (session as any).userId as string;
+
+  if (!(await isEmailVerified(userId))) {
+    return NextResponse.json(
+      { error: "Please verify your email to generate documents.", needsVerification: true },
+      { status: 403 }
+    );
+  }
 
   const usageCheck = await checkUsageLimit(userId, 'proposal');
   if (!usageCheck.canProceed) {
