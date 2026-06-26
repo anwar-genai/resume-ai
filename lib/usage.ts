@@ -1,16 +1,30 @@
 import prisma from '@/lib/db';
-import { planLimits } from '@/lib/plans';
+import { planLimits, PERIOD_DAYS, DocType } from '@/lib/plans';
 
 export interface UsageCheck {
   canProceed: boolean;
-  remainingResumes: number;       // monthly remaining
-  remainingCovers: number;        // monthly remaining
-  remainingDailyResumes: number;  // daily remaining
-  remainingDailyCovers: number;   // daily remaining
-  periodEnd: Date;
+  remaining: number;       // weekly remaining for the requested type
+  remainingDaily: number;  // daily remaining for the requested type
+  periodEnd: Date;         // when the weekly window resets
   plan: string;
   isBlocked: boolean;
   blockReason?: string;
+}
+
+// Column names for each document type's weekly + daily counters.
+const FIELDS: Record<DocType, { weekly: keyof CounterRow; daily: keyof CounterRow }> = {
+  resume: { weekly: 'resumeCount', daily: 'dailyResumeCount' },
+  cover: { weekly: 'coverCount', daily: 'dailyCoverCount' },
+  proposal: { weekly: 'proposalCount', daily: 'dailyProposalCount' },
+};
+
+interface CounterRow {
+  resumeCount: number;
+  coverCount: number;
+  proposalCount: number;
+  dailyResumeCount: number;
+  dailyCoverCount: number;
+  dailyProposalCount: number;
 }
 
 function isSameCalendarDay(a: Date, b: Date): boolean {
@@ -21,17 +35,23 @@ function isSameCalendarDay(a: Date, b: Date): boolean {
   );
 }
 
-export async function checkUsageLimit(userId: string, type: 'resume' | 'cover'): Promise<UsageCheck> {
+function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+export async function checkUsageLimit(userId: string, type: DocType): Promise<UsageCheck> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       resumeCount: true,
       coverCount: true,
-      monthlyResumeLimit: true,
-      monthlyCoverLimit: true,
-      currentPeriodStart: true,
+      proposalCount: true,
       dailyResumeCount: true,
       dailyCoverCount: true,
+      dailyProposalCount: true,
+      currentPeriodStart: true,
       currentDayStart: true,
       plan: true,
       isBlocked: true,
@@ -45,14 +65,11 @@ export async function checkUsageLimit(userId: string, type: 'resume' | 'cover'):
 
   const limits = planLimits(user.plan);
 
-  // Check if user is blocked
   if (user.isBlocked) {
     return {
       canProceed: false,
-      remainingResumes: 0,
-      remainingCovers: 0,
-      remainingDailyResumes: 0,
-      remainingDailyCovers: 0,
+      remaining: 0,
+      remainingDaily: 0,
       periodEnd: new Date(),
       plan: user.plan,
       isBlocked: true,
@@ -62,75 +79,67 @@ export async function checkUsageLimit(userId: string, type: 'resume' | 'cover'):
 
   const now = new Date();
 
-  // ----- Monthly reset (if a month has passed) -----
-  const periodStart = new Date(user.currentPeriodStart);
-  const oneMonthLater = new Date(periodStart);
-  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+  // ----- Weekly reset (if the period has elapsed) -----
+  let currentPeriodStart = new Date(user.currentPeriodStart);
+  const periodEndCandidate = addDays(currentPeriodStart, PERIOD_DAYS);
+  const counts: CounterRow = {
+    resumeCount: user.resumeCount,
+    coverCount: user.coverCount,
+    proposalCount: user.proposalCount,
+    dailyResumeCount: user.dailyResumeCount,
+    dailyCoverCount: user.dailyCoverCount,
+    dailyProposalCount: user.dailyProposalCount,
+  };
 
-  let resumeCount = user.resumeCount;
-  let coverCount = user.coverCount;
-  let currentPeriodStart = user.currentPeriodStart;
-
-  if (now >= oneMonthLater) {
-    resumeCount = 0;
-    coverCount = 0;
+  if (now >= periodEndCandidate) {
+    counts.resumeCount = 0;
+    counts.coverCount = 0;
+    counts.proposalCount = 0;
     currentPeriodStart = now;
     await prisma.user.update({
       where: { id: userId },
-      data: { resumeCount: 0, coverCount: 0, currentPeriodStart: now },
+      data: { resumeCount: 0, coverCount: 0, proposalCount: 0, currentPeriodStart: now },
     });
   }
 
   // ----- Daily reset (if the calendar day has changed) -----
-  let dailyResumeCount = user.dailyResumeCount;
-  let dailyCoverCount = user.dailyCoverCount;
-
   if (!isSameCalendarDay(now, new Date(user.currentDayStart))) {
-    dailyResumeCount = 0;
-    dailyCoverCount = 0;
+    counts.dailyResumeCount = 0;
+    counts.dailyCoverCount = 0;
+    counts.dailyProposalCount = 0;
     await prisma.user.update({
       where: { id: userId },
-      data: { dailyResumeCount: 0, dailyCoverCount: 0, currentDayStart: now },
+      data: {
+        dailyResumeCount: 0,
+        dailyCoverCount: 0,
+        dailyProposalCount: 0,
+        currentDayStart: now,
+      },
     });
   }
 
-  const remainingResumes = Math.max(0, user.monthlyResumeLimit - resumeCount);
-  const remainingCovers = Math.max(0, user.monthlyCoverLimit - coverCount);
-  const remainingDailyResumes = Math.max(0, limits.dailyResume - dailyResumeCount);
-  const remainingDailyCovers = Math.max(0, limits.dailyCover - dailyCoverCount);
-
-  const nextPeriodEnd = new Date(currentPeriodStart);
-  nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
-
-  // Can proceed only if BOTH the monthly and daily budgets have room.
-  let canProceed = false;
-  if (type === 'resume') {
-    canProceed = remainingResumes > 0 && remainingDailyResumes > 0;
-  } else if (type === 'cover') {
-    canProceed = remainingCovers > 0 && remainingDailyCovers > 0;
-  }
+  const field = FIELDS[type];
+  const remaining = Math.max(0, limits.weekly - (counts[field.weekly] as number));
+  const remainingDaily = Math.max(0, limits.daily - (counts[field.daily] as number));
 
   return {
-    canProceed,
-    remainingResumes,
-    remainingCovers,
-    remainingDailyResumes,
-    remainingDailyCovers,
-    periodEnd: nextPeriodEnd,
+    canProceed: remaining > 0 && remainingDaily > 0,
+    remaining,
+    remainingDaily,
+    periodEnd: addDays(currentPeriodStart, PERIOD_DAYS),
     plan: user.plan,
     isBlocked: false,
   };
 }
 
-export async function incrementUsage(userId: string, type: 'resume' | 'cover'): Promise<void> {
-  const updateData =
-    type === 'resume'
-      ? { resumeCount: { increment: 1 }, dailyResumeCount: { increment: 1 } }
-      : { coverCount: { increment: 1 }, dailyCoverCount: { increment: 1 } };
-
+export async function incrementUsage(userId: string, type: DocType): Promise<void> {
+  const field = FIELDS[type];
   await prisma.user.update({
     where: { id: userId },
-    data: updateData,
+    data: {
+      [field.weekly]: { increment: 1 },
+      [field.daily]: { increment: 1 },
+    },
   });
 }
 
@@ -152,27 +161,4 @@ export async function unblockUser(userId: string): Promise<void> {
       blockReason: null,
     },
   });
-}
-
-export async function updateUserLimits(
-  userId: string,
-  resumeLimit?: number,
-  coverLimit?: number
-): Promise<void> {
-  const updateData: { monthlyResumeLimit?: number; monthlyCoverLimit?: number } = {};
-
-  if (resumeLimit !== undefined) {
-    updateData.monthlyResumeLimit = resumeLimit;
-  }
-
-  if (coverLimit !== undefined) {
-    updateData.monthlyCoverLimit = coverLimit;
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-    });
-  }
 }

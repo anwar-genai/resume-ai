@@ -3,22 +3,20 @@ import { useEffect, useState } from "react";
 import GlassCard from "@/app/components/ui/GlassCard";
 import { PLANS } from "@/lib/plans";
 
+interface Quota {
+  remaining: number;
+  remainingDaily: number;
+  periodEnd: string;
+  canProceed: boolean;
+}
+
 interface UsageData {
   plan: string;
   subscriptionStatus?: string | null;
   subscriptionEndsAt?: string | null;
-  resume: {
-    remaining: number;
-    remainingDaily: number;
-    periodEnd: string;
-    canProceed: boolean;
-  };
-  cover: {
-    remaining: number;
-    remainingDaily: number;
-    periodEnd: string;
-    canProceed: boolean;
-  };
+  resume: Quota;
+  cover: Quota;
+  proposal: Quota;
   isBlocked: boolean;
   blockReason?: string;
 }
@@ -75,24 +73,25 @@ export default function UsageDisplay() {
     );
   }
 
-  const isPro = usage.plan === "pro";
-  const limits = PLANS[isPro ? "pro" : "free"];
+  const plan = (usage.plan in PLANS ? usage.plan : "free") as keyof typeof PLANS;
+  const isPaid = plan !== "free";
+  const weeklyLimit = PLANS[plan].limits.weekly;
   const periodEnd = new Date(usage.resume.periodEnd);
-  const daysUntilReset = Math.ceil((periodEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const daysUntilReset = Math.max(0, Math.ceil((periodEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
 
-  const row = (label: string, remaining: number, remainingDaily: number, monthlyTotal: number) => (
+  const row = (label: string, q: Quota) => (
     <div className="flex items-center justify-between">
       <span className="text-sm text-gray-600">{label}</span>
       <div className="flex items-center space-x-2">
         <div className="w-16 bg-gray-200 rounded-full h-2">
           <div
-            className={`h-2 rounded-full ${remaining > 2 ? 'bg-green-500' : remaining > 0 ? 'bg-yellow-500' : 'bg-red-500'}`}
-            style={{ width: `${Math.max(0, (remaining / monthlyTotal) * 100)}%` }}
+            className={`h-2 rounded-full ${q.remaining > 2 ? 'bg-green-500' : q.remaining > 0 ? 'bg-yellow-500' : 'bg-red-500'}`}
+            style={{ width: `${Math.max(0, (q.remaining / weeklyLimit) * 100)}%` }}
           ></div>
         </div>
         <span className="text-sm font-medium text-gray-700">
-          {remaining} left
-          <span className="text-xs text-gray-400"> · {remainingDaily} today</span>
+          {q.remaining} left
+          <span className="text-xs text-gray-400"> · {q.remainingDaily} today</span>
         </span>
       </div>
     </div>
@@ -101,25 +100,26 @@ export default function UsageDisplay() {
   return (
     <GlassCard className="p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-800">Usage This Month</h3>
+        <h3 className="font-semibold text-gray-800">Usage This Week</h3>
         <span
           className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-            isPro ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
+            isPaid ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
           }`}
         >
-          {isPro ? 'PRO' : 'FREE'}
+          {PLANS[plan].name.toUpperCase()}
         </span>
       </div>
 
       <div className="space-y-3">
-        {row('Resumes', usage.resume.remaining, usage.resume.remainingDaily, limits.monthlyResume)}
-        {row('Cover Letters', usage.cover.remaining, usage.cover.remainingDaily, limits.monthlyCover)}
+        {row('Resumes', usage.resume)}
+        {row('Cover Letters', usage.cover)}
+        {row('Proposals', usage.proposal)}
       </div>
 
-      {isPro && usage.subscriptionStatus === 'canceled' && usage.subscriptionEndsAt && (
+      {isPaid && usage.subscriptionStatus === 'canceled' && usage.subscriptionEndsAt && (
         <p className="mt-3 text-xs text-amber-600">
-          Pro ends on {new Date(usage.subscriptionEndsAt).toLocaleDateString()}. You can
-          resume anytime before then.
+          {PLANS[plan].name} ends on {new Date(usage.subscriptionEndsAt).toLocaleDateString()}.
+          You keep full access until then, and can resume anytime before it.
         </p>
       )}
 

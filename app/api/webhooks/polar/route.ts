@@ -1,5 +1,5 @@
 import prisma from "@/lib/db";
-import { PLANS } from "@/lib/plans";
+import { planForProductId, productIdFromEvent } from "@/lib/polar";
 import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
 
 // Polar delivers webhooks using the Standard Webhooks spec, so we verify the
@@ -39,7 +39,11 @@ export async function POST(req: Request) {
         // Keep plan state in sync, but DON'T reset usage on every update
         // (otherwise a card change etc. would hand out free resets).
         const sub = event.data;
-        if (sub.status === "active") {
+        if (sub.status === "active" && sub.cancelAtPeriodEnd) {
+          // Cancel-at-period-end keeps status "active" but should show the
+          // "Pro ends on X" banner — don't let this flip status back to active.
+          await markCanceled(sub);
+        } else if (sub.status === "active") {
           await upgradeUser(sub, false);
         } else if (sub.status === "canceled") {
           await markCanceled(sub);
@@ -108,24 +112,13 @@ async function upgradeUser(sub: any, resetUsage: boolean) {
   await prisma.user.update({
     where: { id: userId },
     data: {
-      plan: "pro",
-      monthlyResumeLimit: PLANS.pro.monthlyResume,
-      monthlyCoverLimit: PLANS.pro.monthlyCover,
+      plan: planForProductId(productIdFromEvent(sub)),
       polarCustomerId: sub?.customerId ?? sub?.customer?.id ?? undefined,
       polarSubscriptionId: sub?.id ?? undefined,
       subscriptionStatus: "active",
       subscriptionEndsAt: sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null,
       // Give a fresh allowance only on first activation.
-      ...(resetUsage
-        ? {
-            resumeCount: 0,
-            coverCount: 0,
-            dailyResumeCount: 0,
-            dailyCoverCount: 0,
-            currentPeriodStart: new Date(),
-            currentDayStart: new Date(),
-          }
-        : {}),
+      ...(resetUsage ? freshAllowance() : {}),
     },
   });
 }
@@ -162,8 +155,6 @@ async function downgradeUser(sub: any) {
     where: { id: userId },
     data: {
       plan: "free",
-      monthlyResumeLimit: PLANS.free.monthlyResume,
-      monthlyCoverLimit: PLANS.free.monthlyCover,
       subscriptionStatus: sub?.status ?? "canceled",
       subscriptionEndsAt: sub?.endsAt ? new Date(sub.endsAt) : null,
     },
@@ -179,19 +170,26 @@ async function handleOrderPaid(order: any) {
   await prisma.user.update({
     where: { id: userId },
     data: {
-      plan: "pro",
-      monthlyResumeLimit: PLANS.pro.monthlyResume,
-      monthlyCoverLimit: PLANS.pro.monthlyCover,
+      plan: planForProductId(productIdFromEvent(order)),
       polarCustomerId: order?.customerId ?? order?.customer?.id ?? undefined,
       polarSubscriptionId: order?.subscriptionId ?? order?.subscription?.id ?? undefined,
       subscriptionStatus: "active",
       // Fresh allowance for the new billing period.
-      resumeCount: 0,
-      coverCount: 0,
-      dailyResumeCount: 0,
-      dailyCoverCount: 0,
-      currentPeriodStart: new Date(),
-      currentDayStart: new Date(),
+      ...freshAllowance(),
     },
   });
+}
+
+// Counter reset applied on first activation and on each paid renewal.
+function freshAllowance() {
+  return {
+    resumeCount: 0,
+    coverCount: 0,
+    proposalCount: 0,
+    dailyResumeCount: 0,
+    dailyCoverCount: 0,
+    dailyProposalCount: 0,
+    currentPeriodStart: new Date(),
+    currentDayStart: new Date(),
+  };
 }

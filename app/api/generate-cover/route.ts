@@ -32,10 +32,12 @@ export async function POST(request: Request) {
     
     return NextResponse.json(
       { 
-        error: `Monthly cover letter limit reached (${usageCheck.remainingCovers} remaining)`,
+        error: `Weekly cover letter limit reached (${usageCheck.remaining} remaining this week, ${usageCheck.remainingDaily} today)`,
         usage: {
-          remaining: usageCheck.remainingCovers,
+          remaining: usageCheck.remaining,
+          remainingDaily: usageCheck.remainingDaily,
           periodEnd: usageCheck.periodEnd,
+          plan: usageCheck.plan,
           type: 'cover letter'
         },
         limitReached: true
@@ -125,7 +127,7 @@ export async function POST(request: Request) {
       id: saved.id, 
       content: letter,
       usage: {
-        remaining: usageCheck.remainingCovers - 1,
+        remaining: usageCheck.remaining - 1,
         periodEnd: usageCheck.periodEnd
       }
     });

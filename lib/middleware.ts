@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
 import { checkUsageLimit } from '@/lib/usage';
+import { DocType } from '@/lib/plans';
 
 export async function withUsageControl(
   handler: (request: Request, context?: any) => Promise<Response>,
-  type: 'resume' | 'cover'
+  type: DocType
 ) {
   return async function(request: Request, context?: any) {
     try {
@@ -35,14 +36,15 @@ export async function withUsageControl(
           );
         }
         
-        const typeLabel = type === 'resume' ? 'resume' : 'cover letter';
-        const remaining = type === 'resume' ? usageCheck.remainingResumes : usageCheck.remainingCovers;
-        
+        const typeLabel =
+          type === 'resume' ? 'resume' : type === 'cover' ? 'cover letter' : 'proposal';
+
         return NextResponse.json(
-          { 
-            error: `Monthly ${typeLabel} limit reached`,
+          {
+            error: `Weekly ${typeLabel} limit reached`,
             usage: {
-              remaining,
+              remaining: usageCheck.remaining,
+              remainingDaily: usageCheck.remainingDaily,
               periodEnd: usageCheck.periodEnd,
               type: typeLabel
             },
@@ -71,7 +73,7 @@ export async function withUsageControl(
 
 export function createUsageControlledHandler(
   handler: (request: Request, context?: any) => Promise<Response>,
-  type: 'resume' | 'cover'
+  type: DocType
 ) {
   return withUsageControl(handler, type);
 }

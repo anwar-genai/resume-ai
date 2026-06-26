@@ -38,31 +38,40 @@ Required: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`, `NEXTAUTH_SECRE
 
 - `lib/auth.ts` — NextAuth config; session exposes `userId`. Use `getAuthSession()`.
 - `lib/db.ts` — Prisma singleton (`prisma`).
-- `lib/usage.ts` — `checkUsageLimit(userId, 'resume'|'cover')` / `incrementUsage(...)`.
-  Enforces **both** monthly and daily caps. Proposals reuse the `'cover'` quota.
-- `lib/plans.ts` — plan limits. Free: 10/mo each. Pro: 70/mo each + 10/day safety cap.
-  Monthly limits are stored per-user (so admins can override); daily caps come from here.
+- `lib/usage.ts` — `checkUsageLimit(userId, 'resume'|'cover'|'proposal')` / `incrementUsage(...)`.
+  Enforces **both** a weekly allowance and a daily safety cap. Each document type
+  (resume / cover / proposal) has its own independent quota.
+- `lib/plans.ts` — single source of truth for tiers & limits (plan-driven, read by
+  `user.plan`; not stored per-user). Free: 3/week each. Pro ($5): 25/week each + 10/day.
+  Power ($12): 100/week each + 25/day. `PERIOD_DAYS = 7`.
 - Generation routes (`app/api/generate-{resume,cover,proposal}`) check usage, call OpenAI,
   save via Prisma, then `incrementUsage`.
+- `app/pricing/page.tsx` — public 3-tier pricing page; paid CTAs hit `/api/checkout?plan=`.
 
 ## Polar subscription billing
 
-Flow: user clicks Upgrade → `GET /api/checkout` creates a Polar checkout (sets
-`externalCustomerId = userId` + `metadata.userId`) → Polar hosted checkout → webhook
-updates the user → UI reflects Pro.
+Flow: user picks a plan on `/pricing` → `GET /api/checkout?plan=pro|power` creates a Polar
+checkout (sets `externalCustomerId = userId` + `metadata.{userId,plan}`) → Polar hosted
+checkout → webhook updates the user → UI reflects the plan.
 
-- `lib/polar.ts` — Polar client. `POLAR_SERVER` = `sandbox` | `production`.
-- `app/api/checkout/route.ts` — creates checkout, redirects.
-- `app/api/portal/route.ts` — Polar customer portal (manage/cancel).
+- `lib/polar.ts` — Polar client + plan↔product mapping. `POLAR_SERVER` = `sandbox` |
+  `production`. `productIdForPlan()` / `planForProductId()` map our plan ids to the
+  per-plan Polar product ids; `productIdFromEvent()` reads the product id off a webhook.
+- `app/api/checkout/route.ts` — creates checkout for `?plan=` (defaults to pro), redirects.
+- `app/api/portal/route.ts` — Polar customer portal (manage/cancel/switch plan).
 - `app/api/webhooks/polar/route.ts` — Standard-Webhooks signature verified via
-  `validateEvent`. Handlers:
-  - **`order.paid` → upgrade to Pro + reset allowance (PRIMARY trigger).**
+  `validateEvent`. The plan granted is derived from the purchased **product id** (not
+  hardcoded). Handlers:
+  - **`order.paid` → upgrade to the plan + reset allowance (PRIMARY trigger).**
     `subscription.active` was unreliable in testing; `order.paid` always arrives and
     carries the customer mapping, so it is the source of truth for upgrades/renewals.
-  - `subscription.canceled` → keep Pro until period end, record `subscriptionEndsAt`.
+  - `subscription.canceled` (and `subscription.updated` with `cancelAtPeriodEnd`) → keep
+    plan until period end, record `subscriptionEndsAt` (drives the "ends on X" banner).
   - `subscription.revoked` → downgrade to Free.
 
-Env vars: `POLAR_SERVER`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID`, `POLAR_WEBHOOK_SECRET`.
+Env vars: `POLAR_SERVER`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID_PRO`,
+`POLAR_PRODUCT_ID_POWER` (legacy `POLAR_PRODUCT_ID` still honoured as Pro),
+`POLAR_WEBHOOK_SECRET`.
 
 ### Gotchas
 - Token, product, and webhook must all come from the **same Polar environment/org**, and
@@ -75,26 +84,29 @@ Env vars: `POLAR_SERVER`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_ID`, `POLAR_WEBHO
 
 ## User model — billing/usage fields
 
-`plan` ("free"|"pro"), `polarCustomerId`, `polarSubscriptionId`, `subscriptionStatus`,
-`subscriptionEndsAt`, `monthlyResume/CoverLimit`, `resume/coverCount`, `currentPeriodStart`,
-`dailyResume/CoverCount`, `currentDayStart`, `isBlocked`, `blockReason`.
+`plan` ("free"|"pro"|"power"), `polarCustomerId`, `polarSubscriptionId`,
+`subscriptionStatus`, `subscriptionEndsAt`, `resume/cover/proposalCount` (weekly),
+`currentPeriodStart`, `dailyResume/Cover/ProposalCount`, `currentDayStart`, `isBlocked`,
+`blockReason`. Limits are no longer stored per-user — they come from `lib/plans.ts`.
 
 ## Status & roadmap
 
-**Current baseline (this branch):** Billing integration works end-to-end against a
-**one-time** Polar product ($5) — upgrade-to-Pro verified in sandbox via `order.paid`.
-The code is provider-config-agnostic: it already handles recurring subscriptions too,
-but the sandbox product used so far is one-time, so `subscription.*` events (and the
-portal's Cancel option) don't apply yet. One-time vs recurring is purely a Polar product
-setting + `POLAR_PRODUCT_ID` — **no code change** is needed to switch.
+**Current baseline (branch `feat/multi-plan-tiers`):** Three plans (Free / Pro $5 /
+Power $12), weekly allowances per document type, proposals split into their own quota,
+a `/pricing` page, and `?plan=`-aware checkout. Recurring subscription lifecycle (activate
+→ cancel keeps plan to period end → revoke downgrades to Free) verified earlier against a
+recurring Pro product. The cancel banner bug (status flipping back to active on
+`subscription.updated`) is fixed.
 
-**Next (separate branch):** create a recurring/monthly $5 Polar product, set its id in
-`POLAR_PRODUCT_ID`, and verify the subscription lifecycle (activate → cancel keeps Pro to
-period end → revoke downgrades to Free) + customer-portal cancel.
+**To finish this branch:** in Polar (sandbox), create the **Power** recurring product and
+set `POLAR_PRODUCT_ID_POWER` (and `POLAR_PRODUCT_ID_PRO` for Pro); add `planId` to each
+product's metadata is optional — plan is resolved by product id. Verify upgrade to each
+tier + plan switch in the customer portal. Optionally add checkout description/image in
+the Polar dashboard (no code).
 
 **Then:**
 - Phase 2 — conversion: turn the 429 "limit reached" responses into a friendly in-app
-  upgrade prompt; add a pricing/landing section.
+  upgrade prompt linking to `/pricing`.
 - Phase 3 — launch: fix pre-existing build-blocking TS errors (`app/api/upload-resume`,
   `app/components/Particles.tsx`, `app/api/preview`); deploy (Vercel + managed Postgres
   e.g. Neon/Supabase); complete Polar production KYC + payout (Payoneer/Wise — operator is

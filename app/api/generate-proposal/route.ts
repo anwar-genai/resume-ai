@@ -15,11 +15,16 @@ export async function POST(request: Request) {
 
   const userId = (session as any).userId as string;
 
-  // Reuse cover letter quota for proposals
-  const usageCheck = await checkUsageLimit(userId, 'cover');
+  const usageCheck = await checkUsageLimit(userId, 'proposal');
   if (!usageCheck.canProceed) {
     return NextResponse.json(
-      { error: "Monthly proposal limit reached", usage: usageCheck, limitReached: true },
+      {
+        error: usageCheck.isBlocked
+          ? 'Account blocked'
+          : `Weekly proposal limit reached (${usageCheck.remaining} remaining this week, ${usageCheck.remainingDaily} today)`,
+        usage: usageCheck,
+        limitReached: true,
+      },
       { status: usageCheck.isBlocked ? 403 : 429 }
     );
   }
@@ -98,8 +103,8 @@ export async function POST(request: Request) {
 
     const saved = await prisma.proposal.create({ data });
 
-    await incrementUsage(userId, 'cover');
-    return NextResponse.json({ id: saved.id, content, usage: { remaining: usageCheck.remainingCovers - 1, periodEnd: usageCheck.periodEnd } });
+    await incrementUsage(userId, 'proposal');
+    return NextResponse.json({ id: saved.id, content, usage: { remaining: usageCheck.remaining - 1, periodEnd: usageCheck.periodEnd } });
   } catch (error: any) {
     return NextResponse.json({ error: "Generation failed", detail: error?.message ?? "" }, { status: 500 });
   }

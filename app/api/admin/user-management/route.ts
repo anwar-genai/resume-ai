@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { blockUser, unblockUser, updateUserLimits } from "@/lib/usage";
+import { blockUser, unblockUser } from "@/lib/usage";
 
 // Simple admin functionality - in production, you'd want proper admin role checking
 export async function POST(request: Request) {
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { action, userId, reason, resumeLimit, coverLimit } = await request.json();
+    const { action, userId, reason } = await request.json();
 
     switch (action) {
       case 'block':
@@ -33,13 +33,6 @@ export async function POST(request: Request) {
         }
         await unblockUser(userId);
         return NextResponse.json({ message: "User unblocked successfully" });
-
-      case 'update_limits':
-        if (!userId) {
-          return NextResponse.json({ error: "User ID required" }, { status: 400 });
-        }
-        await updateUserLimits(userId, resumeLimit, coverLimit);
-        return NextResponse.json({ message: "User limits updated successfully" });
 
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
@@ -78,8 +71,8 @@ export async function GET(request: Request) {
           createdAt: true,
           resumeCount: true,
           coverCount: true,
-          monthlyResumeLimit: true,
-          monthlyCoverLimit: true,
+          proposalCount: true,
+          plan: true,
           currentPeriodStart: true,
           isBlocked: true,
           blockReason: true,

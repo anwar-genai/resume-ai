@@ -31,15 +31,17 @@ export async function POST(request: Request) {
     }
     
     return NextResponse.json(
-      { 
-        error: `Monthly resume limit reached (${usageCheck.remainingResumes} remaining)`,
+      {
+        error: `Weekly resume limit reached (${usageCheck.remaining} remaining this week, ${usageCheck.remainingDaily} today)`,
         usage: {
-          remaining: usageCheck.remainingResumes,
+          remaining: usageCheck.remaining,
+          remainingDaily: usageCheck.remainingDaily,
           periodEnd: usageCheck.periodEnd,
+          plan: usageCheck.plan,
           type: 'resume'
         },
         limitReached: true
-      }, 
+      },
       { status: 429 }
     );
   }
@@ -81,7 +83,7 @@ export async function POST(request: Request) {
       id: saved.id, 
       optimized: optimized,
       usage: {
-        remaining: usageCheck.remainingResumes - 1,
+        remaining: usageCheck.remaining - 1,
         periodEnd: usageCheck.periodEnd
       }
     });

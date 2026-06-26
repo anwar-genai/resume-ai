@@ -25,7 +25,9 @@ export default function Navbar() {
   const [plan, setPlan] = useState<string | null>(null);
 
   const user = session?.user;
-  const isPro = plan === "pro";
+  // Any paid plan (pro/power) shows the badge + "Manage Subscription".
+  const isPro = plan === "pro" || plan === "power";
+  const planLabel = plan === "power" ? "POWER" : "PRO";
   const userInitials = user?.name
     ? user.name.split(" ").map(n => n[0]).join("").toUpperCase()
     : user?.email?.[0]?.toUpperCase() || "?";
@@ -68,7 +70,8 @@ export default function Navbar() {
   }, [status, pathname]);
 
   const goToBilling = () => {
-    window.location.href = isPro ? "/api/portal" : "/api/checkout";
+    // Paid users manage via the Polar portal; free users pick a plan first.
+    window.location.href = isPro ? "/api/portal" : "/pricing";
   };
 
   return (
@@ -146,11 +149,11 @@ export default function Navbar() {
                 {status === "authenticated" && plan && (
                   isPro ? (
                     <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-indigo-500 to-emerald-500 shadow-sm">
-                      <span className="text-[10px]">★</span> PRO
+                      <span className="text-[10px]">★</span> {planLabel}
                     </span>
                   ) : (
                     <Link
-                      href="/api/checkout"
+                      href="/pricing"
                       className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-emerald-600 hover:opacity-90 transition-opacity shadow-sm"
                     >
                       Upgrade
@@ -270,7 +273,7 @@ export default function Navbar() {
                         }
                         onClick={goToBilling}
                       >
-                        {isPro ? "Manage Subscription" : "Upgrade to Pro"}
+                        {isPro ? "Manage Subscription" : "Upgrade plan"}
                       </DropdownItem>
                       <DropdownItem
                         icon={
