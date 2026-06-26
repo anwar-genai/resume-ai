@@ -34,6 +34,11 @@ export const generateProposalSchema = z.object({
   resumeText: z.string().max(LONG, "Resume text is too long").default(""),
 });
 
+export const atsScoreSchema = z.object({
+  resumeText: z.string().trim().min(1, "Resume text is required").max(LONG, "Resume text is too long"),
+  jobDescription: z.string().trim().min(1, "A job description is required").max(MED, "Job description is too long"),
+});
+
 export type ValidationResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /** safeParse wrapper that returns the first issue's message for a 400 response. */

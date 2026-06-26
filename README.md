@@ -25,6 +25,7 @@ Below are feature demos placed alongside their respective routes/flows.
 - **Authentication**: Email/password via NextAuth (Credentials + Prisma adapter, bcrypt hashing)
 - **Email verification & password reset**: Token-based flows delivered via Resend (verify email, forgot/reset password)
 - **Resume optimization**: ATS-focused improvements using OpenAI
+- **ATS match score**: scores a resume against a job description (0–100) with matched/missing keywords and targeted suggestions
 - **Cover letter generation**: Tailored to job title, company, and a pasted job description
 - **Upwork proposal generation**: Tailored to project title, client, budget, and project details
 - **PDF upload & parsing**: Upload an existing resume (PDF) and extract its text via `pdf-parse` / `pdfjs-dist`
@@ -116,6 +117,7 @@ npm run dev
 - `POST /api/generate-cover` — Generate cover letter using OpenAI (uses a pasted job description)
 - `POST /api/generate-proposal` — Generate Upwork proposal using OpenAI (uses pasted project details)
 - `POST /api/upload-resume` — Upload a PDF and extract resume text
+- `POST /api/ats-score` — Score a resume against a job description (JSON: score, matched/missing keywords, suggestions)
 
 **Billing (Polar)**
 - `GET  /api/checkout?plan=pro|power` — Create a Polar checkout for the chosen plan and redirect

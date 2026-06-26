@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import GlassCard from "@/app/components/ui/GlassCard";
 import Button from "@/app/components/ui/Button";
 import { Input, Textarea } from "@/app/components/ui/Input";
+import AtsAnalysis from "@/app/components/AtsAnalysis";
 
 export default function ResumePage() {
   const [title, setTitle] = useState("");
@@ -327,6 +328,8 @@ export default function ResumePage() {
           </div>
         </form>
       </GlassCard>
+
+      <AtsAnalysis resumeText={resume} jobDescription={jobDescription} />
 
       {result && (
         <GlassCard className="p-8" glow>

@@ -47,6 +47,9 @@ Required: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`, `NEXTAUTH_SECRE
 - Generation routes (`app/api/generate-{resume,cover,proposal}`) check usage, call OpenAI,
   save via Prisma, then `incrementUsage`.
 - `app/pricing/page.tsx` — public 3-tier pricing page; paid CTAs hit `/api/checkout?plan=`.
+- `app/api/ats-score` — scores a resume vs a job description (OpenAI JSON mode → score +
+  matched/missing keywords + suggestions). Auth + verified-email gated; per-user daily cap
+  via `atsLimiter` (Upstash), separate from the document quotas. UI: `AtsAnalysis` on `/resume`.
 
 ## Polar subscription billing
 

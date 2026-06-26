@@ -36,6 +36,9 @@ export const loginBackstopLimiter = make(Ratelimit.slidingWindow(20, "1 m"));
 export const registerLimiter = make(Ratelimit.slidingWindow(5, "1 h"));
 export const forgotPasswordLimiter = make(Ratelimit.slidingWindow(4, "1 h"));
 
+// Per-user daily cap on ATS analyses (bounds OpenAI cost; key by userId).
+export const atsLimiter = make(Ratelimit.slidingWindow(25, "1 d"));
+
 export interface RateLimitResult {
   success: boolean;
   /** Seconds until the caller may retry (only meaningful when blocked). */
