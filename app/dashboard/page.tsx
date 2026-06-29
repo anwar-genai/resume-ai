@@ -8,6 +8,7 @@ import Badge from "@/app/components/ui/Badge";
 import UsageDisplay from "@/app/components/UsageDisplay";
 import VerifyEmailBanner from "@/app/components/VerifyEmailBanner";
 import Skeleton, { SkeletonCard } from "@/app/components/ui/Skeleton";
+import { FileText, Mail, Briefcase } from "lucide-react";
 const DocumentPreview = dynamic(() => import("@/app/components/DocumentPreview"), { ssr: false });
 import { useState, useEffect, use } from "react";
 
@@ -348,7 +349,7 @@ export default function DashboardPage({
                 <p className="text-3xl font-bold mt-1">{resumes.length}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                <span className="text-2xl">📄</span>
+                <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
             </div>
           </GlassCard>
@@ -360,7 +361,7 @@ export default function DashboardPage({
                 <p className="text-3xl font-bold mt-1">{letters.length}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <span className="text-2xl">✉️</span>
+                <Mail className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
           </GlassCard>
@@ -372,7 +373,7 @@ export default function DashboardPage({
                 <p className="text-3xl font-bold mt-1">{proposals.length}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <span className="text-2xl">💼</span>
+                <Briefcase className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </GlassCard>
@@ -502,7 +503,7 @@ export default function DashboardPage({
                 {resumes.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                      <span className="text-2xl">📄</span>
+                      <FileText className="w-7 h-7 text-gray-400 dark:text-gray-500" />
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">No resumes yet</p>
                     <Link href="/resume">
@@ -567,7 +568,7 @@ export default function DashboardPage({
                 {letters.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                      <span className="text-2xl">✉️</span>
+                      <Mail className="w-7 h-7 text-gray-400 dark:text-gray-500" />
                 </div>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">No cover letters yet</p>
                     <Link href="/cover-letter">
@@ -639,7 +640,7 @@ export default function DashboardPage({
                 {proposals.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                      <span className="text-2xl">💼</span>
+                      <Briefcase className="w-7 h-7 text-gray-400 dark:text-gray-500" />
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">No proposals yet</p>
                     <Link href="/upwork-proposal">

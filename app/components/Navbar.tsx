@@ -9,12 +9,13 @@ import IconButton from "@/app/components/ui/IconButton";
 import Avatar from "@/app/components/ui/Avatar";
 import Badge from "@/app/components/ui/Badge";
 import Dropdown, { DropdownItem, DropdownDivider } from "@/app/components/ui/Dropdown";
+import { LayoutDashboard, FileText, Mail, Briefcase } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/resume", label: "Resume", icon: "📄" },
-  { href: "/cover-letter", label: "Cover Letter", icon: "✉️" },
-  { href: "/upwork-proposal", label: "Proposal", icon: "💼" },
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/resume", label: "Resume", Icon: FileText },
+  { href: "/cover-letter", label: "Cover Letter", Icon: Mail },
+  { href: "/upwork-proposal", label: "Proposal", Icon: Briefcase },
 ];
 
 export default function Navbar() {
@@ -124,7 +125,7 @@ export default function Navbar() {
                         `}
                       >
                         <span className="relative z-10 flex items-center gap-2">
-                          <span className="text-base">{item.icon}</span>
+                          <item.Icon className="w-4 h-4" />
                           {item.label}
                         </span>
                         {isActive && (
@@ -391,7 +392,7 @@ export default function Navbar() {
                     }
                   `}
                 >
-                  <span className="text-lg">{item.icon}</span>
+                  <item.Icon className="w-5 h-5" />
                   {item.label}
                   {isActive && (
                     <div className="ml-auto w-1 h-4 bg-indigo-500 rounded-full" />
