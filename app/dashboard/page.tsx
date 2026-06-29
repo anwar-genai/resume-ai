@@ -327,57 +327,44 @@ export default function DashboardPage({
             </div>
           </GlassCard>
         ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-slide-up">
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Documents</p>
-                <p className="text-3xl font-bold mt-1">{totalDocuments}</p>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500/20 to-emerald-500/20 flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
+        <GlassCard className="p-4 animate-slide-up" hover={false}>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold">{totalDocuments}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">total documents</span>
             </div>
-          </GlassCard>
-
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Resumes</p>
-                <p className="text-3xl font-bold mt-1">{resumes.length}</p>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
+            <div className="h-5 w-px bg-gray-200 dark:bg-zinc-700 hidden sm:block" />
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <button
+                onClick={() => setActiveTab("resumes")}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <FileText className="w-4 h-4 text-indigo-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white">{resumes.length}</span> Resumes
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("covers")}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <Mail className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white">{letters.length}</span> Cover Letters
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("proposals")}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <Briefcase className="w-4 h-4 text-purple-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white">{proposals.length}</span> Proposals
+                </span>
+              </button>
             </div>
-          </GlassCard>
-
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Cover Letters</p>
-                <p className="text-3xl font-bold mt-1">{letters.length}</p>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <Mail className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Proposals</p>
-                <p className="text-3xl font-bold mt-1">{proposals.length}</p>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                <Briefcase className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </GlassCard>
-        </div>
+          </div>
+        </GlassCard>
         )}
 
       {/* Usage Display */}
@@ -427,9 +414,13 @@ export default function DashboardPage({
         {/* Document Tabs */}
         <div className="animate-slide-up" style={{ animationDelay: "200ms" }}>
           <div className="border-b border-gray-200 dark:border-zinc-700 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <nav className="flex gap-8 -mb-px">
+            <nav className="flex gap-8 -mb-px" role="tablist" aria-label="Documents">
           <button
                 type="button"
+                role="tab"
+                id="tab-resumes"
+                aria-selected={activeTab === "resumes"}
+                aria-controls="panel-documents"
                 onClick={() => setActiveTab("resumes")}
                 className={`
                   relative py-3 px-1 text-sm font-medium transition-colors cursor-pointer
@@ -452,6 +443,10 @@ export default function DashboardPage({
 
           <button
                 type="button"
+                role="tab"
+                id="tab-covers"
+                aria-selected={activeTab === "covers"}
+                aria-controls="panel-documents"
                 onClick={() => setActiveTab("covers")}
                 className={`
                   relative py-3 px-1 text-sm font-medium transition-colors cursor-pointer
@@ -474,6 +469,10 @@ export default function DashboardPage({
 
           <button
                 type="button"
+                role="tab"
+                id="tab-proposals"
+                aria-selected={activeTab === "proposals"}
+                aria-controls="panel-documents"
                 onClick={() => setActiveTab("proposals")}
                 className={`
                   relative py-3 px-1 text-sm font-medium transition-colors cursor-pointer
@@ -497,7 +496,12 @@ export default function DashboardPage({
       </div>
 
           {/* Content */}
-          <div className="mt-8">
+          <div
+            className="mt-8"
+            role="tabpanel"
+            id="panel-documents"
+            aria-labelledby={`tab-${activeTab}`}
+          >
       {activeTab === "resumes" ? (
         <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {resumes.length === 0 ? (
