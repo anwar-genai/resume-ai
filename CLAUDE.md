@@ -165,6 +165,51 @@ passwords, hashed tokens, input validation, privacy/data-rights, email-verificat
   Full step-by-step runbook in **[DEPLOY.md](DEPLOY.md)**. (The previously build-blocking
   TS errors are fixed — `tsc` is clean.)
 
+### Future bets / product ideas (not yet scheduled)
+Strategic context: pure document *generation* is a crowded, low-retention category
+(Rezi, Kickresume, Teal, Jobscan, ApplyArc, Upwex, Proposal Genie, etc.). The ideas
+below move resume-ai from a "generator" toward a sticky **job-hunt / freelance journey
+platform**. Do **not** start these until the web app is deployed and **Product P1
+(export quality)** is fixed — expanding scope pre-launch is how things stall.
+
+- **Chrome extension — decided: NO full conversion; later, a thin companion only.**
+  The web app stays the product (resume editor, diff, templates, PDF export, Polar
+  billing, auth, quotas all live server-side). The one place an extension genuinely
+  wins is the **Upwork/job-board proposal** leg, where the leaders (Upwex, BidPilotPro)
+  read the job post *in-context* so the user never copy-pastes. Plan: a small MV3
+  extension that (1) reads the current job page, (2) calls existing
+  `/api/generate-proposal` with the logged-in session, (3) returns the streamed
+  proposal to the page/clipboard — a **client** for our backend, not a rebuild.
+  **Constraints:** post-launch + post-P1 only; **no auto-bidding** (Upwork ToS / account-
+  ban / support risk); read only the page the logged-in user is already viewing, never
+  auto-submit. Verify Upwork's ToS/DOM stance before committing.
+
+- **Application journey tracking (CRM-lite) — strong retention bet.** This is Teal's
+  moat: track each application (company, role, JD, which resume/cover was used, status
+  applied→responded→interview→offer→rejected/ghosted, dates, notes, **interview
+  learnings**). Turns one-off generation into a reason to return. **Start manual**
+  (user updates status themselves); auto-detecting responses needs Gmail-API
+  integration — heavy + privacy-sensitive — so defer that. New `Application` model +
+  pipeline UI.
+
+- **Project-gap builder — the most *novel* hook, and cheap (pure LLM).** When a user
+  lacks projects matching a JD, guide them to **actually build a relevant one fast**:
+  gap analysis → suggested project + tech stack + structure → a ready-to-paste
+  **build prompt for Claude Code / Codex / Cursor**. Mostly prompt-engineering on the
+  existing LLM infra, no new heavy services. **Ethical framing is load-bearing:** this
+  helps people *build real skills/projects quickly*, never fabricate experience — keep
+  copy as "build it for real, fast," not "list things you didn't do" (else it's resume
+  fraud).
+
+- **Proposal → follow-up message sequences — smallest, extends the proposal feature.**
+  After a bid, generate the funnel: a polite follow-up if no reply, plus reply
+  templates (pricing/scope questions, intro-call scheduling) when the client responds.
+  Deepens the freelancer funnel from bid → won. **Draft only — never auto-send**
+  (ToS/spam).
+
+Recommended sequencing once unblocked (cheapest/most-reuse first): **follow-up
+sequences → project-gap builder → application CRM → Upwork extension.**
+
 ## Constraints
 - Operator is in **Pakistan** → Stripe unavailable. Billing/payouts go through **Polar**
   (Merchant of Record; supports Pakistan payouts via Stripe Connect Express). Do not
