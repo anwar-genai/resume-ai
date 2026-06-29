@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { resumeDataSchema, isTemplateId } from "@/lib/resumeSchema";
 
 export async function GET(
   request: NextRequest,
@@ -15,41 +16,50 @@ export async function GET(
   const { type, id } = await params;
 
   try {
-    let document;
-    
     switch (type) {
-      case "resume":
-        document = await prisma.resume.findFirst({
-          where: { id, userId },
+      case "resume": {
+        const document = await prisma.resume.findFirst({ where: { id, userId } });
+        if (!document) {
+          return NextResponse.json({ error: "Document not found" }, { status: 404 });
+        }
+        // Prefer structured data so the modal can render the real template
+        // (one-column ATS / two-column Modern) instead of raw text.
+        const parsed = document.structuredContent
+          ? resumeDataSchema.safeParse(document.structuredContent)
+          : null;
+        return NextResponse.json({
+          content: document.optimizedContent ?? document.content,
+          data: parsed?.success ? parsed.data : null,
+          template: isTemplateId(document.template) ? document.template : "ats",
+          metadata: { createdAt: document.createdAt },
         });
-        break;
-      
-      case "cover":
-        document = await prisma.coverLetter.findFirst({
-          where: { id, userId },
+      }
+
+      case "cover": {
+        const document = await prisma.coverLetter.findFirst({ where: { id, userId } });
+        if (!document) {
+          return NextResponse.json({ error: "Document not found" }, { status: 404 });
+        }
+        return NextResponse.json({
+          content: document.content,
+          metadata: { createdAt: document.createdAt },
         });
-        break;
-      
-      case "proposal":
-        document = await prisma.proposal.findFirst({
-          where: { id, userId },
+      }
+
+      case "proposal": {
+        const document = await prisma.proposal.findFirst({ where: { id, userId } });
+        if (!document) {
+          return NextResponse.json({ error: "Document not found" }, { status: 404 });
+        }
+        return NextResponse.json({
+          content: document.content,
+          metadata: { createdAt: document.createdAt },
         });
-        break;
-      
+      }
+
       default:
         return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
     }
-
-    if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      content: document.content,
-      metadata: {
-        createdAt: document.createdAt,
-      }
-    });
   } catch (error) {
     console.error("Preview error:", error);
     return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 });

@@ -1,9 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/Button";
 import IconButton from "@/app/components/ui/IconButton";
 import Badge from "@/app/components/ui/Badge";
 import Skeleton from "@/app/components/ui/Skeleton";
+import ResumeRenderer from "@/app/components/resume/ResumeRenderer";
+import type { ResumeData, TemplateId } from "@/lib/resumeSchema";
 
 interface DocumentPreviewProps {
   isOpen: boolean;
@@ -28,8 +31,11 @@ export default function DocumentPreview({
   metadata,
 }: DocumentPreviewProps) {
   const [content, setContent] = useState<string>("");
+  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [template, setTemplate] = useState<TemplateId>("ats");
   const [loading, setLoading] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<"txt" | "pdf" | "docx">("pdf");
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen && documentId) {
@@ -39,11 +45,16 @@ export default function DocumentPreview({
 
   async function fetchContent() {
     setLoading(true);
+    setResumeData(null);
     try {
       const response = await fetch(`/api/preview/${documentType}/${documentId}`);
       if (response.ok) {
         const data = await response.json();
         setContent(data.content || "");
+        if (documentType === "resume" && data.data) {
+          setResumeData(data.data as ResumeData);
+          setTemplate((data.template as TemplateId) || "ats");
+        }
       }
     } catch (error) {
       console.error("Failed to fetch document:", error);
@@ -211,6 +222,10 @@ export default function DocumentPreview({
                   <Skeleton variant="text" height="20px" />
                   <Skeleton variant="text" height="20px" width="60%" />
                 </div>
+              ) : documentType === "resume" && resumeData ? (
+                <div className="rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800/50 p-4 overflow-x-auto">
+                  <ResumeRenderer data={resumeData} template={template} />
+                </div>
               ) : (
                 <div className="prose prose-gray dark:prose-invert max-w-none">
                   <div className="whitespace-pre-wrap font-sans text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -246,7 +261,14 @@ export default function DocumentPreview({
                     Copy to Clipboard
                   </Button>
                   {documentType === "resume" && (
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        onClose();
+                        router.push(`/resume/builder?id=${documentId}`);
+                      }}
+                    >
                       <svg
                         className="w-4 h-4"
                         fill="none"
