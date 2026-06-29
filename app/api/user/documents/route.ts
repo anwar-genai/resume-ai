@@ -44,3 +44,45 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await getAuthSession();
+  if (!session || !(session as any).userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = (session as any).userId as string;
+  const type = request.nextUrl.searchParams.get("type");
+  const id = request.nextUrl.searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "Missing document id" }, { status: 400 });
+  }
+
+  try {
+    // deleteMany scoped to { id, userId } both enforces ownership and avoids a
+    // separate existence check — count 0 means not found or not owned.
+    let result;
+    switch (type) {
+      case "resumes":
+        result = await prisma.resume.deleteMany({ where: { id, userId } });
+        break;
+      case "covers":
+        result = await prisma.coverLetter.deleteMany({ where: { id, userId } });
+        break;
+      case "proposals":
+        result = await prisma.proposal.deleteMany({ where: { id, userId } });
+        break;
+      default:
+        return NextResponse.json({ error: "Invalid document type" }, { status: 400 });
+    }
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Failed to delete document:", error);
+    return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
+  }
+}

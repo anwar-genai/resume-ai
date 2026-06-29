@@ -25,7 +25,12 @@ export default function CoverLetterPage() {
         if (r.ok) {
           const data = await r.json();
           setResumes(data.items || []);
-          if (data.items?.length) setResumeId(data.items[0].id);
+          if (data.items?.length) {
+            // Honor ?resumeId= from the dashboard "Use for Cover" action, else default to the latest
+            const requested = new URLSearchParams(window.location.search).get("resumeId");
+            const match = requested && data.items.some((it: { id: string }) => it.id === requested);
+            setResumeId(match ? requested : data.items[0].id);
+          }
         }
       } catch {}
     })();
